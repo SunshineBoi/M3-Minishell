@@ -1,31 +1,41 @@
 /* ************************************************************************** */
 /*                                                                            */
 /*                                                        :::      ::::::::   */
-/*   utils_exit.c                                       :+:      :+:    :+:   */
+/*   utils_generic.c                                    :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
 /*   By: kong <kong@student.42singapore.sg>         +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
-/*   Created: 2026/05/15 20:49:23 by kong              #+#    #+#             */
-/*   Updated: 2026/05/15 20:49:23 by kong             ###   ########.fr       */
+/*   Created: 2026/05/20 20:24:23 by kong              #+#    #+#             */
+/*   Updated: 2026/05/20 20:24:23 by kong             ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "minishell.h"
 
-int	errexit(t_errcode code)
+size_t	ft_strlen(const char *str)
 {
-	if (code == EXIT_FAILURE)
-		return (exit(EXIT_FAILURE), EXIT_FAILURE);
-	return (EXIT_FAILURE);
+	size_t	count;
+
+	count = 0;
+	while (str[count])
+		count++;
+	return (count);
 }
 
-// ! for further review later
-void	hardexit()
+char	*ft_strndup(char *str, int len)
 {
-	exit(EXT_NOK);
-}
+	char	*new;
+	int		i;
 
-/*
-rl_clear_history -> need to clear history before shell exits
-rl_on_new_line -> when ctrl+c, tell lib we have move to new line
-*/
+	new = malloc((len + 1) * sizeof(char));
+	if (!new)
+		return (NULL);
+	i = 0;
+	while (i < len && str[i])
+	{
+		new[i] = str[i];
+		i++;
+	}
+	new[i] = '\0';
+	return (new);
+}
