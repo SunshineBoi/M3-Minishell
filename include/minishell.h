@@ -71,6 +71,42 @@ typedef struct s_app
 	int			exitcode;
 }	t_app;
 
+
+typedef enum e_qstate
+{
+	Q_NONE,
+	Q_SQUOTE,
+	Q_DQUOTE
+}	t_qstate;
+
+typedef struct s_strbuf
+{
+	char	*buf;
+	size_t	len;
+	size_t	cap;
+}	t_strbuf;
+
+typedef struct s_wordlist
+{
+	char	**items;
+	size_t	count;
+	size_t	cap;
+}	t_wordlist;
+
+typedef struct s_argv_builder
+{
+	char	**argv;
+	size_t	count;
+	size_t	cap;
+}	t_argv_builder;
+
+
+typedef struct s_parser
+{
+	t_tokensll	*cur;
+	int			index;
+}	t_parser;
+
 // utils_exit.c
 /**
  * @brief Terminate the program immediately.
@@ -223,5 +259,51 @@ int	isspecialsym(int ch);
  * @return Head of the token list, or NULL on failure.
  */
 t_tokensll	*build_tokensll(char *str);
+
+// parser.c
+/**
+ * @brief Parse a token list into an AST.
+ * @param tokens Head of the token list.
+ * @return Root AST node, or NULL on parse error.
+ */
+t_ast_node	*parse_tokens(t_tokensll *tokens);
+
+// expand.c
+/**
+ * @brief Expand variables, quotes, and field-splitting for a single word.
+ * @param input Raw word with quotes preserved from the lexer.
+ * @param envp Environment array (KEY=VALUE).
+ * @param last_status Last command exit status.
+ * @param out_words Output NULL-terminated array of expanded words.
+ * @param out_count Output count of words.
+ * @return 0 on success, ERR_MALLOC on failure.
+ */
+int	expand_word(const char *input, char **envp, int last_status,
+		char ***out_words, size_t *out_count);
+/**
+ * @brief Expand a command argv list into a new argv list.
+ * @param argv Original argv list.
+ * @param envp Environment array (KEY=VALUE).
+ * @param last_status Last command exit status.
+ * @param out_argv Output NULL-terminated argv list.
+ * @return 0 on success, ERR_MALLOC on failure.
+ */
+int	expand_argv(char **argv, char **envp, int last_status, char ***out_argv);
+/**
+ * @brief Expand redirection targets in-place.
+ * @param redir Redirection list.
+ * @param envp Environment array (KEY=VALUE).
+ * @param last_status Last command exit status.
+ * @return 0 on success, ERR_* on failure.
+ */
+int	expand_redirs(t_redir *redir, char **envp, int last_status);
+/**
+ * @brief Expand all command nodes in an AST recursively.
+ * @param node Root node.
+ * @param envp Environment array (KEY=VALUE).
+ * @param last_status Last command exit status.
+ * @return 0 on success, ERR_* on failure.
+ */
+int	expand_ast(t_ast_node *node, char **envp, int last_status);
 
 #endif
