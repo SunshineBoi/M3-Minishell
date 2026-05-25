@@ -1,31 +1,24 @@
 /* ************************************************************************** */
 /*                                                                            */
 /*                                                        :::      ::::::::   */
-/*   utils_exit.c                                       :+:      :+:    :+:   */
+/*   utils_validator.c                                  :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
 /*   By: kong <kong@student.42singapore.sg>         +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
-/*   Created: 2026/05/15 20:49:23 by kong              #+#    #+#             */
-/*   Updated: 2026/05/15 20:49:23 by kong             ###   ########.fr       */
+/*   Created: 2026/05/22 17:11:26 by kong              #+#    #+#             */
+/*   Updated: 2026/05/22 17:11:26 by kong             ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "minishell.h"
 
-int	errexit(t_errcode code)
+int	iswhitespace(int ch)
 {
-	if (code == EXIT_FAILURE)
-		return (exit(EXIT_FAILURE), EXIT_FAILURE);
-	return (EXIT_FAILURE);
+	return (ch == ' ' || ch == '\n' || ch == '\t'
+		|| ch == '\f' || ch == '\v' || ch == '\r');
 }
 
-// ! for further review later
-void	hardexit()
+int	isspecialsym(int ch)
 {
-	exit(EXT_NOK);
+	return (ch == '|' || ch == '>' || ch == '<');
 }
-
-/*
-rl_clear_history -> need to clear history before shell exits
-rl_on_new_line -> when ctrl+c, tell lib we have move to new line
-*/

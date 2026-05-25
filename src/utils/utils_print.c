@@ -1,31 +1,29 @@
 /* ************************************************************************** */
 /*                                                                            */
 /*                                                        :::      ::::::::   */
-/*   utils_exit.c                                       :+:      :+:    :+:   */
+/*   utils_print.c                                      :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
 /*   By: kong <kong@student.42singapore.sg>         +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
-/*   Created: 2026/05/15 20:49:23 by kong              #+#    #+#             */
-/*   Updated: 2026/05/15 20:49:23 by kong             ###   ########.fr       */
+/*   Created: 2026/05/20 20:26:35 by kong              #+#    #+#             */
+/*   Updated: 2026/05/20 20:26:35 by kong             ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "minishell.h"
 
-int	errexit(t_errcode code)
+void	ft_putstr_fd(char *s, int fd)
 {
-	if (code == EXIT_FAILURE)
-		return (exit(EXIT_FAILURE), EXIT_FAILURE);
-	return (EXIT_FAILURE);
+	if (!s || fd < 0)
+		return ;
+	write(fd, s, ft_strlen(s));
 }
 
 // ! for further review later
-void	hardexit()
+void	printerr(t_errcode code)
 {
-	exit(EXT_NOK);
+	if (code == ERR_MALLOC)
+		perror("minishell");
+	else if (code == ERR_QUOTE)
+		ft_putstr_fd("minishell: Invalid quotes\n", 2);
 }
-
-/*
-rl_clear_history -> need to clear history before shell exits
-rl_on_new_line -> when ctrl+c, tell lib we have move to new line
-*/
