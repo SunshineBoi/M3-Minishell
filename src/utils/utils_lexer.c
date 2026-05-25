@@ -12,6 +12,13 @@
 
 #include "minishell.h"
 
+/**
+ * @brief Ensure token buffer can hold at least new_size bytes.
+ * @param token Token with a dynamically sized buffer.
+ * @param old_size Current used size.
+ * @param new_size Desired size.
+ * @return 1 on success, ERR_MALLOC on failure.
+ */
 static int	_resizebuffer(t_tokensll *token, int old_size, int new_size)
 {
 	if (new_size >= token->val_size)
@@ -24,6 +31,13 @@ static int	_resizebuffer(t_tokensll *token, int old_size, int new_size)
 	return (1);
 }
 
+/**
+ * @brief Append a quoted segment to the token buffer.
+ * @param str Input buffer starting at the quote.
+ * @param token Token node to append to.
+ * @param quote Quote character to match.
+ * @return Characters consumed, or ERR_QUOTE/ERR_MALLOC on failure.
+ */
 static int	_quotes_build(char *str, t_tokensll *token, char quote)
 {
 	int	src_i;
@@ -54,6 +68,12 @@ static int	_quotes_build(char *str, t_tokensll *token, char quote)
 	return (src_i);
 }
 
+/**
+ * @brief Append a single character to the token buffer.
+ * @param ch Character to append.
+ * @param token Token node to append to.
+ * @return 1 on success, ERR_MALLOC on failure.
+ */
 static int	_char_build(char ch, t_tokensll *token)
 {
 	int	dest_i;
@@ -80,6 +100,12 @@ static int	_char_build(char ch, t_tokensll *token)
 	return (1);
 }
 
+/**
+ * @brief Build a string token by consuming a word segment.
+ * @param token Token node to populate.
+ * @param str Input buffer at the start of a word.
+ * @return Characters consumed, or ERR_QUOTE/ERR_MALLOC on failure.
+ */
 int	string_build(t_tokensll *token, char *str)
 {
 	int	len;
@@ -103,6 +129,12 @@ int	string_build(t_tokensll *token, char *str)
 	return (len);
 }
 
+/**
+ * @brief Build a special operator token from the input.
+ * @param str Input buffer at a special character.
+ * @param token Token node to populate.
+ * @return Characters consumed, or ERR_MALLOC on failure.
+ */
 int	special_build(char *str, t_tokensll *token)
 {
 	int	build_flag;

@@ -12,6 +12,10 @@
 
 #include "minishell.h"
 
+/**
+ * @brief Allocate and initialize a token node.
+ * @return New token node, or NULL on failure.
+ */
 t_tokensll	*init_token()
 {
 	t_tokensll	*new;
@@ -26,6 +30,10 @@ t_tokensll	*init_token()
 	return (new);
 }
 
+/**
+ * @brief Allocate and initialize list traversal helpers.
+ * @return New ops structure, or NULL on failure.
+ */
 t_sll_ops	*init_sll_ops()
 {
 	t_sll_ops	*ops;
@@ -39,6 +47,11 @@ t_sll_ops	*init_sll_ops()
 	return (ops);
 }
 
+/**
+ * @brief Count nodes in a token list.
+ * @param sll Head of the list.
+ * @return Number of nodes.
+ */
 int	ft_sllsize(t_tokensll *sll)
 {
 	int	size;
@@ -52,6 +65,10 @@ int	ft_sllsize(t_tokensll *sll)
 	return (size);
 }
 
+/**
+ * @brief Free a single token node.
+ * @param token Token node to free.
+ */
 void	freetoken(t_tokensll *token)
 {
 	if (!token)
@@ -60,6 +77,10 @@ void	freetoken(t_tokensll *token)
 	free(token);
 }
 
+/**
+ * @brief Free a token list and its contents.
+ * @param sll Head of the list.
+ */
 void	freetokensll(t_tokensll *sll)
 {
 	t_tokensll	*next;

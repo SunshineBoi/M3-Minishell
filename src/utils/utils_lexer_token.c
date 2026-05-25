@@ -12,6 +12,11 @@
 
 #include "minishell.h"
 
+/**
+ * @brief Build a pipe token (|).
+ * @param token Token node to populate.
+ * @return Number of characters consumed, or ERR_MALLOC on failure.
+ */
 int	build_ops_pipe(t_tokensll *token)
 {
 	token->type = TOK_PIPE;
@@ -21,6 +26,11 @@ int	build_ops_pipe(t_tokensll *token)
 	return (1);
 }
 
+/**
+ * @brief Build a redirection output token (>).
+ * @param token Token node to populate.
+ * @return Number of characters consumed, or ERR_MALLOC on failure.
+ */
 int	build_ops_dirout(t_tokensll *token)
 {
 	token->type = TOK_DIROUT;
@@ -30,6 +40,11 @@ int	build_ops_dirout(t_tokensll *token)
 	return (1);
 }
 
+/**
+ * @brief Build a redirection append token (>>).
+ * @param token Token node to populate.
+ * @return Number of characters consumed, or ERR_MALLOC on failure.
+ */
 int	build_ops_dirappnd(t_tokensll *token)
 {
 	token->type = TOK_DIRAPPND;
@@ -39,6 +54,11 @@ int	build_ops_dirappnd(t_tokensll *token)
 	return (2);
 }
 
+/**
+ * @brief Build a redirection input token (<).
+ * @param token Token node to populate.
+ * @return Number of characters consumed, or ERR_MALLOC on failure.
+ */
 int	build_ops_dirin(t_tokensll *token)
 {
 	token->type = TOK_DIRIN;
@@ -48,6 +68,11 @@ int	build_ops_dirin(t_tokensll *token)
 	return (1);
 }
 
+/**
+ * @brief Build a heredoc token (<<).
+ * @param token Token node to populate.
+ * @return Number of characters consumed, or ERR_MALLOC on failure.
+ */
 int	build_ops_heredoc(t_tokensll *token)
 {
 	token->type = TOK_HEREDOC;
