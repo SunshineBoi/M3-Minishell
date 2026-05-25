@@ -1,15 +1,3 @@
-/* ************************************************************************** */
-/*                                                                            */
-/*                                                        :::      ::::::::   */
-/*   minishell.h                                        :+:      :+:    :+:   */
-/*                                                    +:+ +:+         +:+     */
-/*   By: kong <kong@student.42singapore.sg>         +#+  +:+       +#+        */
-/*                                                +#+#+#+#+#+   +#+           */
-/*   Created: 2026/05/15 20:07:29 by kong              #+#    #+#             */
-/*   Updated: 2026/05/15 20:07:29 by kong             ###   ########.fr       */
-/*                                                                            */
-/* ************************************************************************** */
-
 #ifndef MINISHELL_H
 # define MINISHELL_H
 
@@ -34,7 +22,6 @@ typedef enum s_errcode
 	ERR_FORK = -6,
 }	t_errcode;
 
-/*
 /**
  * @brief Represents standard POSIX exit status codes for a process.
  *

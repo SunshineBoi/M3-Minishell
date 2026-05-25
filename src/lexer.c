@@ -1,14 +1,3 @@
-/* ************************************************************************** */
-/*                                                                            */
-/*                                                        :::      ::::::::   */
-/*   lexer.c                                            :+:      :+:    :+:   */
-/*                                                    +:+ +:+         +:+     */
-/*   By: kong <kong@student.42singapore.sg>         +#+  +:+       +#+        */
-/*                                                +#+#+#+#+#+   +#+           */
-/*   Created: 2026/05/16 16:39:14 by kong              #+#    #+#             */
-/*   Updated: 2026/05/16 16:39:14 by kong             ###   ########.fr       */
-/*                                                                            */
-/* ************************************************************************** */
 
 #include "minishell.h"
 
@@ -32,6 +21,7 @@ static void	_update_ops(t_sll_ops *ops)
  * @return Characters consumed, or ERR_* on failure.
  */
 static int	build_token(t_sll_ops *ops, char *str)
+{
 	int	toklen;
 
 	ops->curr = init_token();
