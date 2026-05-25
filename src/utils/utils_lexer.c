@@ -42,8 +42,17 @@ static int	_quotes_build(char *str, t_tokensll *token, char quote)
 	else
 		dest_i = ft_strlen(token->val);
 	src_i = 1;
-	while (str[src_i] && str[src_i] != quote)
+	while (str[src_i])
+	{
+		if (quote == '"' && str[src_i] == '\\' && str[src_i + 1])
+		{
+			src_i += 2;
+			continue ;
+		}
+		if (str[src_i] == quote)
+			break ;
 		src_i++;
+	}
 	if (str[src_i] == '\0')
 		return (printerr(ERR_QUOTE), ERR_QUOTE);
 	else if (str[src_i] == quote)
@@ -105,7 +114,19 @@ int	string_build(t_tokensll *token, char *str)
 	{
 		built_skipped = 0;
 		// ! to confirm if need to implement backslash
-		if (str[len] == '\'' || str[len] == '"')
+		if (str[len] == '\\')
+		{
+			if (str[len + 1])
+			{
+				built_skipped = _char_build(str[len + 1], token);
+				if (built_skipped == ERR_MALLOC)
+					return (ERR_MALLOC);
+				len += 2;
+				continue ;
+			}
+			built_skipped = _char_build('\\', token);
+		}
+		else if (str[len] == '\'' || str[len] == '"')
 			built_skipped = _quotes_build(str + len, token, str[len]);
 		else
 			built_skipped = _char_build(str[len], token);

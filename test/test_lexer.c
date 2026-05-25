@@ -79,7 +79,7 @@ Test(lexer, unterminated_quote_returns_null)
 	cr_assert_null(tokens);
 }
 
-Test(lexer, single_quotes_strip_and_preserve_spaces)
+Test(lexer, single_quotes_preserved_for_expansion)
 {
 	t_tokensll *tokens;
 
@@ -87,12 +87,12 @@ Test(lexer, single_quotes_strip_and_preserve_spaces)
 	cr_assert_not_null(tokens);
 	cr_assert_eq(ft_sllsize(tokens), 2);
 	assert_token(tokens, TOK_STR, "echo");
-	assert_token(tokens->next, TOK_STR, "a b");
+	assert_token(tokens->next, TOK_STR, "'a b'");
 
 	freetokensll(tokens);
 }
 
-Test(lexer, double_quotes_strip_and_allow_escapes)
+Test(lexer, double_quotes_preserved_for_expansion)
 {
 	t_tokensll *tokens;
 
@@ -100,7 +100,7 @@ Test(lexer, double_quotes_strip_and_allow_escapes)
 	cr_assert_not_null(tokens);
 	cr_assert_eq(ft_sllsize(tokens), 2);
 	assert_token(tokens, TOK_STR, "echo");
-	assert_token(tokens->next, TOK_STR, "a\"b");
+	assert_token(tokens->next, TOK_STR, "\"a\\\"b\"");
 
 	freetokensll(tokens);
 }
