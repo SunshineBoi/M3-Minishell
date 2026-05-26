@@ -326,6 +326,32 @@ int	expand_word(const char *input, char **envp, int last_status,
 			i++;
 			continue ;
 		}
+		if (state == Q_NONE && input[i] == '\\')
+		{
+			if (input[i + 1] == '\n')
+			{
+				i += 2;
+				continue ;
+			}
+			if (input[i + 1])
+			{
+				word_in_progress = 1;
+				if (sb_push_char(&sb, input[i + 1]) != 0)
+					return (wl_free(&wl), sb_free(&sb), ERR_MALLOC);
+				i += 2;
+				continue ;
+			}
+			word_in_progress = 1;
+			if (sb_push_char(&sb, '\\') != 0)
+				return (wl_free(&wl), sb_free(&sb), ERR_MALLOC);
+			i++;
+			continue ;
+		}
+		if (state == Q_DQUOTE && input[i] == '\\' && input[i + 1] == '\n')
+		{
+			i += 2;
+			continue ;
+		}
 		if (state == Q_DQUOTE && input[i] == '\\'
 			&& (input[i + 1] == '\\' || input[i + 1] == '"'
 				|| input[i + 1] == '$'))

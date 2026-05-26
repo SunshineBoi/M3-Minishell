@@ -113,7 +113,7 @@ Test(lexer, backslash_escapes_space_outside_quotes)
 	cr_assert_not_null(tokens);
 	cr_assert_eq(ft_sllsize(tokens), 2);
 	assert_token(tokens, TOK_STR, "echo");
-	assert_token(tokens->next, TOK_STR, "a b");
+	assert_token(tokens->next, TOK_STR, "a\\ b");
 
 	freetokensll(tokens);
 }
@@ -171,7 +171,7 @@ Test(lexer, escaped_quotes_outside_quotes)
 	cr_assert_not_null(tokens);
 	cr_assert_eq(ft_sllsize(tokens), 2);
 	assert_token(tokens, TOK_STR, "echo");
-	assert_token(tokens->next, TOK_STR, "\"a\"");
+	assert_token(tokens->next, TOK_STR, "\\\"a\\\"");
 	freetokensll(tokens);
 }
 

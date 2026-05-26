@@ -118,6 +118,14 @@ int	string_build(t_tokensll *token, char *str)
 		{
 			if (str[len + 1])
 			{
+				if (str[len + 1] == '\n')
+				{
+					len += 2;
+					continue ;
+				}
+				built_skipped = _char_build('\\', token);
+				if (built_skipped == ERR_MALLOC)
+					return (ERR_MALLOC);
 				built_skipped = _char_build(str[len + 1], token);
 				if (built_skipped == ERR_MALLOC)
 					return (ERR_MALLOC);
