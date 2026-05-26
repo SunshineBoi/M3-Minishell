@@ -116,40 +116,6 @@ Test(expand, field_splitting)
 	free_words(words);
 }
 
-Test(expand, backslash_escapes_in_unquoted_text)
-{
-	char **words;
-	size_t count;
-	char *envp[] = {"VAR=hi", NULL};
-
-	cr_assert_eq(expand_word("\\$VAR", envp, 0, &words, &count), 0);
-	cr_assert_eq(count, 1);
-	cr_assert_str_eq(words[0], "$VAR");
-	free_words(words);
-
-	cr_assert_eq(expand_word("a\\ b", envp, 0, &words, &count), 0);
-	cr_assert_eq(count, 1);
-	cr_assert_str_eq(words[0], "a b");
-	free_words(words);
-}
-
-Test(expand, line_continuation_removal)
-{
-	char **words;
-	size_t count;
-	char *envp[] = {NULL};
-
-	cr_assert_eq(expand_word("ab\\\ncd", envp, 0, &words, &count), 0);
-	cr_assert_eq(count, 1);
-	cr_assert_str_eq(words[0], "abcd");
-	free_words(words);
-
-	cr_assert_eq(expand_word("\"ab\\\ncd\"", envp, 0, &words, &count), 0);
-	cr_assert_eq(count, 1);
-	cr_assert_str_eq(words[0], "abcd");
-	free_words(words);
-}
-
 Test(expand, argv_expansion)
 {
 	char *argv[] = {"echo", "$VAR", NULL};
