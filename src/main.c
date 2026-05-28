@@ -9,13 +9,8 @@ void	process(char *str)
 	t_tokensll	*token_sll;
 
 	token_sll = build_tokensll(str);
-	/* for testing use */
-	while (token_sll)
-	{
-		printf("[token val]: %s$", token_sll->val);
-		printf("\n\t[token type]: %d$\n", token_sll->type);
-		token_sll = token_sll->next;
-	}
+	print_tokensll(token_sll); // for testing use
+	validate_tokensll(token_sll);
 }
 
 int	minishell()

@@ -26,3 +26,21 @@ void	printerr(t_errcode code)
 	else if (code == ERR_QUOTE)
 		ft_putstr_fd("minishell: Invalid quotes\n", 2);
 }
+
+void	printsynerr(char *tokval)
+{
+	ft_putstr_fd("minishell: syntax error near unexpected token `", 2);
+	ft_putstr_fd(tokval, 2);
+	ft_putstr_fd("'\n", 2);
+}
+
+void	print_tokensll(t_tokensll *tokensll)
+{
+	/* for testing use */
+	while (tokensll)
+	{
+		printf("[token val]: %s$", tokensll->val);
+		printf("\n\t[token type]: %d$\n", tokensll->type);
+		tokensll = tokensll->next;
+	}
+}
