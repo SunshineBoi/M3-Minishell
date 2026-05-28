@@ -115,7 +115,12 @@ typedef struct s_parser
  */
 void	hardexit();
 
-// utils_lexer_token.c
+// * utils_lexer_build.c
+int	quotes_build(char *str, t_tokensll *token, char quote);
+int	char_build(char ch, t_tokensll *token);
+int backslash_build(char *str, t_tokensll *token);
+
+// * utils_lexer_token.c
 /**
  * @brief Initialize a pipe operator token.
  * @param token Token node to populate.
@@ -151,7 +156,7 @@ int	build_ops_dirin(t_tokensll *token);
  */
 int	build_ops_heredoc(t_tokensll *token);
 
-// utils_lexer.c
+// * utils_lexer.c
 /**
  * @brief Build a string token from the given buffer.
  * @param token Token node to populate.
