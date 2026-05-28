@@ -1,17 +1,12 @@
-/* ************************************************************************** */
-/*                                                                            */
-/*                                                        :::      ::::::::   */
-/*   utils_generic.c                                    :+:      :+:    :+:   */
-/*                                                    +:+ +:+         +:+     */
-/*   By: kong <kong@student.42singapore.sg>         +#+  +:+       +#+        */
-/*                                                +#+#+#+#+#+   +#+           */
-/*   Created: 2026/05/20 20:24:23 by kong              #+#    #+#             */
-/*   Updated: 2026/05/20 20:24:23 by kong             ###   ########.fr       */
-/*                                                                            */
-/* ************************************************************************** */
+
 
 #include "minishell.h"
 
+/**
+ * @brief Compute the length of a null-terminated string.
+ * @param str Input string.
+ * @return Length excluding the null terminator.
+ */
 size_t	ft_strlen(const char *str)
 {
 	size_t	count;
@@ -22,6 +17,12 @@ size_t	ft_strlen(const char *str)
 	return (count);
 }
 
+/**
+ * @brief Duplicate up to len characters into a new string.
+ * @param str Source string.
+ * @param len Maximum number of characters to copy.
+ * @return Newly allocated string, or NULL on failure.
+ */
 char	*ft_strndup(char *str, int len)
 {
 	char	*new;

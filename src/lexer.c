@@ -1,17 +1,10 @@
-/* ************************************************************************** */
-/*                                                                            */
-/*                                                        :::      ::::::::   */
-/*   lexer.c                                            :+:      :+:    :+:   */
-/*                                                    +:+ +:+         +:+     */
-/*   By: kong <kong@student.42singapore.sg>         +#+  +:+       +#+        */
-/*                                                +#+#+#+#+#+   +#+           */
-/*   Created: 2026/05/16 16:39:14 by kong              #+#    #+#             */
-/*   Updated: 2026/05/16 16:39:14 by kong             ###   ########.fr       */
-/*                                                                            */
-/* ************************************************************************** */
 
 #include "minishell.h"
 
+/**
+ * @brief Update list pointers after creating a new token.
+ * @param ops List traversal helpers.
+ */
 static void	_update_ops(t_sll_ops *ops)
 {
 	if (!ops->head)
@@ -21,6 +14,12 @@ static void	_update_ops(t_sll_ops *ops)
 	ops->prev = ops->curr;
 }
 
+/**
+ * @brief Build a single token from the input.
+ * @param ops List traversal helpers.
+ * @param str Input buffer at the current position.
+ * @return Characters consumed, or ERR_* on failure.
+ */
 static int	build_token(t_sll_ops *ops, char *str)
 {
 	int	toklen;
@@ -47,6 +46,11 @@ static int	build_token(t_sll_ops *ops, char *str)
 	return (toklen);
 }
 
+/**
+ * @brief Tokenize the input string into a linked list.
+ * @param str Input command line string.
+ * @return Head of the token list, or NULL on failure.
+ */
 t_tokensll	*build_tokensll(char *str)
 {
 	int	toklen;

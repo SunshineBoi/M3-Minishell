@@ -1,18 +1,14 @@
-/* ************************************************************************** */
-/*                                                                            */
-/*                                                        :::      ::::::::   */
-/*   utils_mem.c                                        :+:      :+:    :+:   */
-/*                                                    +:+ +:+         +:+     */
-/*   By: kong <kong@student.42singapore.sg>         +#+  +:+       +#+        */
-/*                                                +#+#+#+#+#+   +#+           */
-/*   Created: 2026/05/22 17:15:55 by kong              #+#    #+#             */
-/*   Updated: 2026/05/22 17:15:55 by kong             ###   ########.fr       */
-/*                                                                            */
-/* ************************************************************************** */
 
 #include "minishell.h"
 
 
+/**
+ * @brief Copy nbyte bytes from src to dest.
+ * @param dest Destination buffer.
+ * @param src Source buffer.
+ * @param nbyte Number of bytes to copy.
+ * @return dest, or NULL if dest/src is NULL.
+ */
 void	*ft_memcpy(void *dest, const void *src, size_t nbyte)
 {
 	unsigned char		*dest_p;
@@ -27,6 +23,13 @@ void	*ft_memcpy(void *dest, const void *src, size_t nbyte)
 	return (dest);
 }
 
+/**
+ * @brief Reallocate a string buffer to a new size.
+ * @param old Existing buffer (may be NULL).
+ * @param old_size Size of existing content in bytes.
+ * @param new_size Desired buffer size in bytes.
+ * @return New buffer pointer, or NULL on failure.
+ */
 char	*ft_realloc(char *old, size_t old_size, size_t new_size)
 {
 	char	*new;

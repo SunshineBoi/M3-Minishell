@@ -1,17 +1,11 @@
-/* ************************************************************************** */
-/*                                                                            */
-/*                                                        :::      ::::::::   */
-/*   utils_exit.c                                       :+:      :+:    :+:   */
-/*                                                    +:+ +:+         +:+     */
-/*   By: kong <kong@student.42singapore.sg>         +#+  +:+       +#+        */
-/*                                                +#+#+#+#+#+   +#+           */
-/*   Created: 2026/05/15 20:49:23 by kong              #+#    #+#             */
-/*   Updated: 2026/05/15 20:49:23 by kong             ###   ########.fr       */
-/*                                                                            */
-/* ************************************************************************** */
 
 #include "minishell.h"
 
+/**
+ * @brief Exit the program on fatal error codes.
+ * @param code Internal error code to evaluate.
+ * @return EXIT_FAILURE for error cases.
+ */
 int	errexit(t_errcode code)
 {
 	if (code == EXIT_FAILURE)
@@ -20,9 +14,12 @@ int	errexit(t_errcode code)
 }
 
 // ! for further review later
+/**
+ * @brief Terminate immediately with a nonzero exit code.
+ */
 void	hardexit()
 {
-	exit(EXT_NOK);
+	exit(EX_ERR);
 }
 
 /*
