@@ -1,39 +1,57 @@
-
-
 #include "minishell.h"
 
-// t_app	*init_app();
-
-void	process(char *str)
+t_app	*init_app(char **envp)
 {
-	t_tokensll	*token_sll;
+	t_app	*app;
 
-	token_sll = build_tokensll(str);
-	print_tokensll(token_sll); // for testing use
-	validate_tokensll(token_sll);
+	app = malloc(sizeof(t_app));
+	if (!app)
+		return (printerr_syscall(ERR_MALLOC), NULL);
+	app->envp = envp;
+	app->exitcode = EX_OK;
+	app->tokensll = NULL;
+	return (app);
 }
 
-int	minishell()
+void	process_prompt(t_app *app, char *str)
 {
-	char	*input;
+	app->tokensll = build_tokensll(str);
+	print_tokensll(app->tokensll); // ! for testing use, delete later
+	app->exitcode = EX_OK; // ! for time being to validate tokensll, remove it later
+	validate_tokensll(app);
+}
 
-	// ! later, think of where to init t_app
+int	minishell(char **envp)
+{
+	t_app	*app;
+	char	*prompt;
+
+	app = init_app(envp);
+	if (!app)
+		hardexit();
 	while (1)
 	{
-		input = readline("minishell$ ");
-		if (!input)
+		prompt = readline("minishell$ ");
+		if (!prompt)
 			// ! how to free env copy, history, anything else?
-			// ! to print correct msg
+			// ! to print correct msg - "logout"
 			exit(EXIT_SUCCESS); // ctrl+d 
-		if (*input)
-			add_history(input);
-		process(input);
-		free(input);
+		if (*prompt)
+			add_history(prompt);
+		process_prompt(app, prompt);
+		free(prompt);
 	}
+	free(app);
 	return (EXIT_SUCCESS);
 }
 
-int	main(void)
+int	main(int ac, char **av, char **envp)
 {
-	return (minishell());
+	(void)av;
+	if (ac != 1)
+	{
+		ft_putstr_fd("minishell: invalid number of arguments\n", 2);
+		return (EXIT_FAILURE);
+	}
+	return (minishell(envp));
 }

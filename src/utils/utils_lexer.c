@@ -1,4 +1,3 @@
-
 #include "minishell.h"
 
 /**
@@ -37,7 +36,7 @@ static int	_quotes_build(char *str, t_tokensll *token, char quote)
 	{
 		token->val = malloc(token->val_size);
 		if (!token->val)
-			return (printerr(ERR_MALLOC), ERR_MALLOC);
+			return (printerr_syscall(ERR_MALLOC), ERR_MALLOC);
 	}
 	else
 		dest_i = ft_strlen(token->val);
@@ -54,12 +53,12 @@ static int	_quotes_build(char *str, t_tokensll *token, char quote)
 		src_i++;
 	}
 	if (str[src_i] == '\0')
-		return (printerr(ERR_QUOTE), ERR_QUOTE);
+		return (printerr_syscall(ERR_QUOTE), ERR_QUOTE);
 	else if (str[src_i] == quote)
 		src_i += 1;
 	// adjust buffer size if needed
 	if (_resizebuffer(token, dest_i, src_i + dest_i) == ERR_MALLOC)
-		return (printerr(ERR_MALLOC), ERR_MALLOC);
+		return (printerr_syscall(ERR_MALLOC), ERR_MALLOC);
 	// starts appending
 	ft_memcpy((token->val) + dest_i, str, src_i);
 	token->val[src_i + dest_i] = '\0';
@@ -81,7 +80,7 @@ static int	_char_build(char ch, t_tokensll *token)
 	{
 		token->val = malloc(token->val_size);
 		if (!token->val)
-			return (printerr(ERR_MALLOC), ERR_MALLOC);
+			return (printerr_syscall(ERR_MALLOC), ERR_MALLOC);
 	}
 	else
 		dest_i = ft_strlen(token->val);
@@ -91,7 +90,7 @@ static int	_char_build(char ch, t_tokensll *token)
 		token->val_size = (dest_i + 1) * 2;
 		token->val = ft_realloc(token->val, dest_i, token->val_size);
 		if (!token->val)
-			return (printerr(ERR_MALLOC), ERR_MALLOC);
+			return (printerr_syscall(ERR_MALLOC), ERR_MALLOC);
 	}
 	token->val[dest_i] = ch;
 	token->val[dest_i + 1] = '\0';
@@ -167,6 +166,6 @@ int	special_build(char *str, t_tokensll *token)
 			build_flag = build_ops_dirin(token);
 	}
 	if (build_flag == ERR_MALLOC)
-		return (printerr(ERR_MALLOC), ERR_MALLOC);
+		return (printerr_syscall(ERR_MALLOC), ERR_MALLOC);
 	return (build_flag);
 }

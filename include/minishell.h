@@ -10,14 +10,17 @@
 
 # define BUFFER_SIZE 4096
 
-typedef enum s_errcode
+typedef enum e_errcode
 {
-	ERR_MALLOC = -1,
-	ERR_QUOTE = -2,
-	ERR_CMDNEXEC = -3,
-	ERR_CMDNFOUND = -4,
-	ERR_PIPE = -5,
-	ERR_FORK = -6,
+	ERR_MALLOC = -1, // malloc/realloc failed
+	ERR_QUOTE = -2, // unclosed quote in lexer
+	ERR_SYNTAX = -3, // grammartically syntax error
+	ERR_CMDNEXEC = -4, // permission denied / is a directory / ambiguous redir
+	ERR_CMDNFOUND = -5, // command not found in PATH
+	ERR_PIPE = -6, // pipe() syscall failed
+	ERR_FORK = -7, // fork() syscall failed
+	ERR_CD = -8,
+	ERR_REDIR = -9,
 }	t_errcode;
 
 /**
@@ -26,7 +29,7 @@ typedef enum s_errcode
  * These codes are returned to the operating system upon process termination
  * to indicate the outcome of the execution.
  */
-typedef enum e_exit_code
+typedef enum e_exitcode
 {
     EX_OK = 0,   /**< Program executed successfully. */
     EX_ERR = 1,   /**< General catchall for minor/generic errors. */
@@ -34,9 +37,16 @@ typedef enum e_exit_code
     EX_CMD_NEXEC   = 126, /**< Command invoked but is not executable. */
     EX_CMD_NOTFOUND = 127, /**< Command cannot be found in PATH. */
     EX_SIG_BASE    = 128  /**< Base offset for fatal signal terminations (EX_SIG_BASE + signum). */
-} exit_code_t;
+}	t_exitcode;
 
-typedef enum s_token_type
+typedef enum e_qstate
+{
+	Q_NONE,
+	Q_SQUOTE,
+	Q_DQUOTE
+}	t_qstate;
+
+typedef enum e_token_type
 {
 	TOK_STR,
 	TOK_PIPE,
@@ -64,18 +74,10 @@ typedef struct s_sll_ops
 
 typedef struct s_app
 {
-	t_sll_ops	*llops;
 	t_tokensll	*tokensll;
-	char		*envp;
+	char		**envp;
 	int			exitcode;
 }	t_app;
-
-typedef enum e_qstate
-{
-	Q_NONE,
-	Q_SQUOTE,
-	Q_DQUOTE
-}	t_qstate;
 
 typedef struct s_strbuf
 {
@@ -192,14 +194,17 @@ char	*ft_realloc(char *old, size_t old_size, size_t new_size);
  * @param fd File descriptor to write to.
  */
 void	ft_putstr_fd(char *s, int fd);
-
-/**
- * @brief Print a human-readable error message for an error code.
- * @param code Internal error code.
- */
-void	printerr(t_errcode code);
-void	printsynerr(char *tokval);
 void	print_tokensll(t_tokensll *tokensll);
+
+// utils_printerr.c
+void	printerr_syscall(t_errcode code);
+void	printerr_syntax(char *tokval);
+void	printerr_quotes();
+void	printerr_redir(char *filename);
+void	printerr_cmdnfound(char *cmd);
+
+// utils_printerr_builtin.c
+void	printerr_cd(char *filename);
 
 // utils_sll.c
 /**
@@ -249,6 +254,12 @@ size_t	ft_strlen(const char *str);
  */
 char	*ft_strndup(char *str, int len);
 
+// utils_validator_tokens.c
+int	ispipe(t_token_type type);
+int	isredir(t_token_type type);
+int	is_valid_pipe(t_tokensll *tokens);
+int	is_valid_redir(t_tokensll *tokens);
+int	validate_tokensll(t_app *app);
 
 // utils_validator.c
 /**
@@ -264,7 +275,6 @@ int	iswhitespace(int ch);
  * @return Nonzero if special, zero otherwise.
  */
 int	isspecialsym(int ch);
-int	validate_tokensll(t_tokensll *tokens);
 
 // lexer.c
 /**

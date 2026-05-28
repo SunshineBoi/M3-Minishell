@@ -1,5 +1,3 @@
-
-
 #include "minishell.h"
 
 /**
@@ -12,7 +10,7 @@ t_tokensll	*init_token()
 
 	new = malloc(sizeof(t_tokensll));
 	if (!new)
-		return (printerr(ERR_MALLOC), NULL);
+		return (printerr_syscall(ERR_MALLOC), NULL);
 	new->next = NULL;
 	new->val = NULL;
 	new->val_size = BUFFER_SIZE;
@@ -30,7 +28,7 @@ t_sll_ops	*init_sll_ops()
 
 	ops = malloc(sizeof(t_sll_ops));
 	if (!ops)
-		return (printerr(ERR_MALLOC), NULL);
+		return (printerr_syscall(ERR_MALLOC), NULL);
 	ops->curr = NULL;
 	ops->head = NULL;
 	ops->prev = NULL;
