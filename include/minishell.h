@@ -61,12 +61,11 @@ typedef struct s_sll_ops
 	t_tokensll	*head;
 }	t_sll_ops;
 
-typedef struct s_app
+typedef struct s_shell
 {
-	t_tokensll	*tokensll;
-	char		*envp;
-	int			exitcode;
-}	t_app;
+	char		**envp;
+	int			last_status;
+}	t_shell;
 
 
 typedef enum e_qstate
@@ -100,8 +99,7 @@ typedef struct s_argv_builder
 typedef struct s_expand_ctx
 {
 	const char	*input;
-	char		**envp;
-	int			last_status;
+	t_shell		*shell;
 	t_qstate	state;
 	t_strbuf	sb;
 	t_wordlist	wl;
@@ -319,7 +317,7 @@ const char	*env_lookup(char **envp, const char *key, size_t key_len);
 char		*itoa_status(int status);
 
 // expand_helpers_1.c
-int			init_ctx(t_expand_ctx *ctx, const char *input, char **envp, int last_status);
+int			init_ctx(t_expand_ctx *ctx, const char *input, t_shell *shell);
 int			flush_word(t_wordlist *wl, t_strbuf *sb, int force_empty);
 int			append_unquoted_text(t_strbuf *sb, t_wordlist *wl, const char *text, int *word_in_progress);
 int			handle_whitespace(t_expand_ctx *ctx);
@@ -332,38 +330,34 @@ int			expand_step(t_expand_ctx *ctx);
 /**
  * @brief Expand variables, quotes, and field-splitting for a single word.
  * @param input Raw word with quotes preserved from the lexer.
- * @param envp Environment array (KEY=VALUE).
- * @param last_status Last command exit status.
+ * @param shell Shell context containing envp and last_status.
  * @param out_words Output NULL-terminated array of expanded words.
  * @param out_count Output count of words.
  * @return 0 on success, ERR_MALLOC on failure.
  */
-int	expand_word(const char *input, char **envp, int last_status,
+int	expand_word(const char *input, t_shell *shell,
 		char ***out_words, size_t *out_count);
 /**
  * @brief Expand a command argv list into a new argv list.
  * @param argv Original argv list.
- * @param envp Environment array (KEY=VALUE).
- * @param last_status Last command exit status.
+ * @param shell Shell context containing envp and last_status.
  * @param out_argv Output NULL-terminated argv list.
  * @return 0 on success, ERR_MALLOC on failure.
  */
-int	expand_argv(char **argv, char **envp, int last_status, char ***out_argv);
+int	expand_argv(char **argv, t_shell *shell, char ***out_argv);
 /**
  * @brief Expand redirection targets in-place.
  * @param redir Redirection list.
- * @param envp Environment array (KEY=VALUE).
- * @param last_status Last command exit status.
+ * @param shell Shell context containing envp and last_status.
  * @return 0 on success, ERR_* on failure.
  */
-int	expand_redirs(t_redir *redir, char **envp, int last_status);
+int	expand_redirs(t_redir *redir, t_shell *shell);
 /**
  * @brief Expand all command nodes in an AST recursively.
  * @param node Root node.
- * @param envp Environment array (KEY=VALUE).
- * @param last_status Last command exit status.
+ * @param shell Shell context containing envp and last_status.
  * @return 0 on success, ERR_* on failure.
  */
-int	expand_ast(t_ast_node *node, char **envp, int last_status);
+int	expand_ast(t_ast_node *node, t_shell *shell);
 
 #endif
