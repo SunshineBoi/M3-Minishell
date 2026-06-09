@@ -34,7 +34,7 @@ t_ast_node	*ast_new_cmd(char **argv, t_redir *redirs, t_span span)
 
 	node = malloc(sizeof(t_ast_node));
 	if (!node)
-		return (printerr(ERR_MALLOC), NULL);
+		return (printerr_syscall(ERR_MALLOC), NULL);
 	node->type = NODE_CMD;
 	node->span = span;
 	node->content.cmd.argv = argv;
@@ -49,7 +49,7 @@ t_ast_node	*ast_new_binop(t_binop_type op, t_ast_node *left,
 
 	node = malloc(sizeof(t_ast_node));
 	if (!node)
-		return (printerr(ERR_MALLOC), NULL);
+		return (printerr_syscall(ERR_MALLOC), NULL);
 	node->type = NODE_BINOP;
 	node->span = span;
 	node->content.binop.op = op;
