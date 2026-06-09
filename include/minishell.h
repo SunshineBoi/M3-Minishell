@@ -10,8 +10,6 @@
 
 # define BUFFER_SIZE 4096
 
-
-
 typedef enum s_errcode
 {
 	ERR_MALLOC = -1,
@@ -267,6 +265,24 @@ t_tokensll	*build_tokensll(char *str);
  * @return Root AST node, or NULL on parse error.
  */
 t_ast_node	*parse_tokens(t_tokensll *tokens);
+void		advance(t_parser *p);
+
+// parser_helpers.c
+int			parse_word(t_parser *p, t_argv_builder *ab);
+int			parse_redir(t_parser *p, t_redir **redirs);
+void		free_ab_redirs(t_argv_builder *ab, t_redir *redirs);
+int			is_redir_token(t_token_type type);
+t_redir_type	tok_to_redir(t_token_type type);
+
+// utils_argv.c
+int			argv_builder_init(t_argv_builder *ab);
+int			argv_builder_push(t_argv_builder *ab, char *word);
+void		argv_builder_free(t_argv_builder *ab);
+
+// utils_redir.c
+t_redir		*redir_new(t_redir_type type, const char *target);
+void		redir_free(t_redir *redir);
+t_redir		*redir_append(t_redir *head, t_redir *node);
 
 // expand.c
 /**
