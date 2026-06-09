@@ -1,19 +1,5 @@
 #include "minishell.h"
 
-static void	free_argv(char **argv)
-{
-	size_t	i;
-
-	if (!argv)
-		return ;
-	i = 0;
-	while (argv[i])
-	{
-		free(argv[i]);
-		i++;
-	}
-	free(argv);
-}
 
 static void	free_redirs(t_redir *redir)
 {

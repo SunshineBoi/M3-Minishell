@@ -2,21 +2,6 @@
 #include <string.h>
 #include "minishell.h"
 
-static void free_words(char **words)
-{
-	size_t i;
-
-	if (!words)
-		return;
-	i = 0;
-	while (words[i])
-	{
-		free(words[i]);
-		i++;
-	}
-	free(words);
-}
-
 static void assert_words(char **words, size_t count, const char **expected)
 {
 	size_t i;
