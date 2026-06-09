@@ -30,32 +30,6 @@ static void assert_words(char **words, size_t count, const char **expected)
 	cr_assert_null(words[count]);
 }
 
-static t_redir *redir_new(t_redir_type type, const char *target)
-{
-	t_redir *redir;
-
-	redir = malloc(sizeof(t_redir));
-	if (!redir)
-		return (NULL);
-	redir->type = type;
-	redir->target = strdup(target);
-	redir->fd = -1;
-	redir->next = NULL;
-	return (redir);
-}
-
-static void redir_free(t_redir *redir)
-{
-	t_redir *next;
-
-	while (redir)
-	{
-		next = redir->next;
-		free(redir->target);
-		free(redir);
-		redir = next;
-	}
-}
 
 Test(expand, expands_exit_status)
 {

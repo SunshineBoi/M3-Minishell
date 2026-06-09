@@ -412,56 +412,6 @@ int	expand_word(const char *input, char **envp, int last_status,
 	return (0);
 }
 
-static int	argv_builder_init(t_argv_builder *ab)
-{
-	ab->cap = 4;
-	ab->count = 0;
-	ab->argv = malloc(sizeof(char *) * ab->cap);
-	if (!ab->argv)
-		return (ERR_MALLOC);
-	ab->argv[0] = NULL;
-	return (0);
-}
-
-static int	argv_builder_push(t_argv_builder *ab, char *word)
-{
-	char	**newargv;
-
-	if (ab->count + 1 >= ab->cap)
-	{
-		size_t	old_cap;
-
-		old_cap = ab->cap;
-		ab->cap *= 2;
-		newargv = (char **)ft_realloc((char *)ab->argv,
-					sizeof(char *) * old_cap,
-					sizeof(char *) * ab->cap);
-		if (!newargv)
-			return (ERR_MALLOC);
-		ab->argv = newargv;
-	}
-	ab->argv[ab->count++] = word;
-	ab->argv[ab->count] = NULL;
-	return (0);
-}
-
-static void	argv_builder_free(t_argv_builder *ab)
-{
-	size_t	i;
-
-	if (!ab->argv)
-		return ;
-	i = 0;
-	while (i < ab->count)
-	{
-		free(ab->argv[i]);
-		i++;
-	}
-	free(ab->argv);
-	ab->argv = NULL;
-	ab->count = 0;
-	ab->cap = 0;
-}
 
 static void	free_argv(char **argv)
 {
@@ -540,33 +490,33 @@ int	expand_redirs(t_redir *redir, char **envp, int last_status)
 	return (0);
 }
 
-int	expand_ast(t_ast_node *node, char **envp, int last_status)
+static int	expand_cmd_node(t_cmd_node *cmd, char **envp, int last_status)
 {
 	char	**expanded;
 	int		res;
+	if (expand_argv(cmd->argv, envp, last_status, &expanded) != 0)
+		return (ERR_MALLOC);
+	free_argv(cmd->argv);
+	cmd->argv = expanded;
+	res = expand_redirs(cmd->redirs, envp, last_status);
+	return (res);
+}
+
+int	expand_ast(t_ast_node *node, char **envp, int last_status)
+{
+	int	res;
 
 	if (!node)
 		return (0);
 	if (node->type == NODE_CMD)
-	{
-		if (expand_argv(node->content.cmd.argv, envp,
-				last_status, &expanded) != 0)
-			return (ERR_MALLOC);
-		free_argv(node->content.cmd.argv);
-		node->content.cmd.argv = expanded;
-		res = expand_redirs(node->content.cmd.redirs, envp, last_status);
-		if (res != 0)
-			return (res);
-		return (0);
-	}
+		return (expand_cmd_node(&node->content.cmd, envp, last_status));
 	if (node->type == NODE_BINOP)
 	{
 		res = expand_ast(node->content.binop.left, envp, last_status);
 		if (res != 0)
 			return (res);
-		res = expand_ast(node->content.binop.right, envp, last_status);
-		if (res != 0)
-			return (res);
+		return (expand_ast(node->content.binop.right, envp, last_status));
 	}
 	return (0);
 }
+
