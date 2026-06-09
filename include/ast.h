@@ -1,6 +1,8 @@
 #ifndef AST_H
 # define AST_H
 
+# include <stddef.h>
+
 typedef enum e_node_type
 {
 	NODE_CMD,
