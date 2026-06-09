@@ -49,36 +49,29 @@ static const char	*env_lookup(char **envp, const char *key, size_t key_len)
 	return ("");
 }
 
+static void	fill_buf(char *buf, int *i, long n)
+{
+	if (n >= 10)
+		fill_buf(buf, i, n / 10);
+	buf[(*i)++] = (char)('0' + (n % 10));
+}
+
 static char	*itoa_status(int status)
 {
 	char	buf[12];
-	int		neg;
 	int		i;
 	long	n;
 	char	*out;
-	int		j;
 
-	n = status;
-	neg = (n < 0);
-	if (neg)
-		n = -n;
 	i = 0;
-	if (n == 0)
-		buf[i++] = '0';
-	while (n > 0)
-	{
-		buf[i++] = (char)('0' + (n % 10));
-		n /= 10;
-	}
-	if (neg)
+	if (status < 0)
 		buf[i++] = '-';
-	out = malloc((size_t)i + 1);
-	if (!out)
-		return (NULL);
-	out[i] = '\0';
-	j = 0;
-	while (i-- > 0)
-		out[j++] = buf[i];
+	n = status;
+	if (status < 0)
+		n = -n;
+	fill_buf(buf, &i, n);
+	buf[i] = '\0';
+	out = ft_strndup(buf, i);
 	return (out);
 }
 
