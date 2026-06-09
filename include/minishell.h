@@ -73,6 +73,13 @@ typedef struct s_app
  * Intended for unrecoverable error paths where cleanup is either not
  * possible or not required.
  */
+// utils_exit.c
+/**
+ * @brief Terminate the program immediately.
+ *
+ * Intended for unrecoverable error paths where cleanup is either not
+ * possible or not required.
+ */
 void	hardexit();
 void	setexit(t_app *app, t_exitcode code);
 
