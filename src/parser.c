@@ -124,71 +124,69 @@ static t_redir_type	tok_to_redir(t_token_type type)
 	return (REDIR_HEREDOC);
 }
 
+static void	free_ab_redirs(t_argv_builder *ab, t_redir *redirs)
+{
+	argv_builder_free(ab);
+	redir_free(redirs);
+}
+
+static int	parse_word(t_parser *p, t_argv_builder *ab)
+{
+	char	*word;
+
+	word = ft_strndup(p->cur->val, ft_strlen(p->cur->val));
+	if (!word)
+		return (-1);
+	if (argv_builder_push(ab, word) != 0)
+	{
+		free(word);
+		return (-1);
+	}
+	advance(p);
+	return (0);
+}
+
+static int	parse_redir(t_parser *p, t_redir **redirs)
+{
+	t_token_type	type;
+	t_redir			*new_redir;
+
+	type = p->cur->type;
+	advance(p);
+	if (!p->cur || p->cur->type != TOK_STR)
+		return (-1);
+	new_redir = redir_new(tok_to_redir(type), p->cur->val);
+	if (!new_redir)
+		return (-1);
+	*redirs = redir_append(*redirs, new_redir);
+	advance(p);
+	return (0);
+}
+
 static t_ast_node	*parse_simple_command(t_parser *p)
 {
 	t_argv_builder	ab;
 	t_redir		*redirs;
-	t_tokensll		*tok;
-	t_ast_node		*node;
-	t_span			span;
+	t_ast_node	*node;
+	int			start;
 
 	if (argv_builder_init(&ab) != 0)
 		return (NULL);
 	redirs = NULL;
-	span.start = p->index;
-	span.end = p->index;
+	start = p->index;
 	while (p->cur && (p->cur->type == TOK_STR || is_redir_token(p->cur->type)))
 	{
-		tok = p->cur;
-		if (tok->type == TOK_STR)
-		{
-			char	*word = ft_strndup(tok->val, ft_strlen(tok->val));
-			if (!word || argv_builder_push(&ab, word) != 0)
-			{
-				free(word);
-				argv_builder_free(&ab);
-				redir_free(redirs);
-				return (NULL);
-			}
-			advance(p);
-			span.end = p->index;
+		if (p->cur->type == TOK_STR && parse_word(p, &ab) == 0)
 			continue ;
-		}
-		if (is_redir_token(tok->type))
-		{
-			t_redir	*new_redir;
-			advance(p);
-			if (!p->cur || p->cur->type != TOK_STR)
-			{
-				argv_builder_free(&ab);
-				redir_free(redirs);
-				return (NULL);
-			}
-			new_redir = redir_new(tok_to_redir(tok->type), p->cur->val);
-			if (!new_redir)
-			{
-				argv_builder_free(&ab);
-				redir_free(redirs);
-				return (NULL);
-			}
-			redirs = redir_append(redirs, new_redir);
-			advance(p);
-			span.end = p->index;
+		if (is_redir_token(p->cur->type) && parse_redir(p, &redirs) == 0)
 			continue ;
-		}
+		return (free_ab_redirs(&ab, redirs), NULL);
 	}
 	if (ab.count == 0 && !redirs)
-	{
-		argv_builder_free(&ab);
-		return (NULL);
-	}
-	node = ast_new_cmd(ab.argv, redirs, span);
+		return (free_ab_redirs(&ab, redirs), NULL);
+	node = ast_new_cmd(ab.argv, redirs, (t_span){start, p->index});
 	if (!node)
-	{
-		argv_builder_free(&ab);
-		redir_free(redirs);
-		return (NULL);
-	}
+		free_ab_redirs(&ab, redirs);
 	return (node);
 }
 
