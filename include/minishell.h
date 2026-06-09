@@ -65,7 +65,6 @@ typedef struct s_sll_ops
 
 typedef struct s_app
 {
-	t_sll_ops	*llops;
 	t_tokensll	*tokensll;
 	char		*envp;
 	int			exitcode;
@@ -103,6 +102,7 @@ typedef struct s_argv_builder
 
 typedef struct s_parser
 {
+	/* Parser-local cursor. t_app keeps only the token-list head. */
 	t_tokensll	*cur;
 	int			index;
 }	t_parser;
@@ -236,7 +236,7 @@ size_t	ft_strlen(const char *str);
  * @param len Maximum number of characters to copy.
  * @return Newly allocated string, or NULL on failure.
  */
-char	*ft_strndup(char *str, int len);
+char	*ft_strndup(const char *str, int len);
 
 // utils_validator.c
 /**

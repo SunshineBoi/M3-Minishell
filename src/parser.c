@@ -2,28 +2,6 @@
 
 
 
-static char	*dup_str(const char *s)
-{
-	size_t	len;
-	char	*dup;
-	size_t	i;
-
-	if (!s)
-		return (NULL);
-	len = ft_strlen(s);
-	dup = malloc(len + 1);
-	if (!dup)
-		return (NULL);
-	i = 0;
-	while (i < len)
-	{
-		dup[i] = s[i];
-		i++;
-	}
-	dup[i] = '\0';
-	return (dup);
-}
-
 static int	argv_builder_init(t_argv_builder *ab)
 {
 	ab->cap = 4;
@@ -83,7 +61,7 @@ static t_redir	*redir_new(t_redir_type type, const char *target)
 	if (!redir)
 		return (NULL);
 	redir->type = type;
-	redir->target = dup_str(target);
+	redir->target = ft_strndup(target, ft_strlen(target));
 	if (!redir->target)
 	{
 		free(redir);
@@ -164,7 +142,7 @@ static t_ast_node	*parse_simple_command(t_parser *p)
 		tok = p->cur;
 		if (tok->type == TOK_STR)
 		{
-			char	*word = dup_str(tok->val);
+			char	*word = ft_strndup(tok->val, ft_strlen(tok->val));
 			if (!word || argv_builder_push(&ab, word) != 0)
 			{
 				free(word);

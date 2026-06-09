@@ -23,7 +23,7 @@ size_t	ft_strlen(const char *str)
  * @param len Maximum number of characters to copy.
  * @return Newly allocated string, or NULL on failure.
  */
-char	*ft_strndup(char *str, int len)
+char	*ft_strndup(const char *str, int len)
 {
 	char	*new;
 	int		i;
