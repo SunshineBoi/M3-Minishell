@@ -190,11 +190,16 @@ static t_ast_node	*parse_simple_command(t_parser *p)
 	return (node);
 }
 
+static void	free_left_right(t_ast_node *left, t_ast_node *right)
+{
+	ast_free(left);
+	ast_free(right);
+}
+
 static t_ast_node	*parse_pipeline(t_parser *p)
 {
 	t_ast_node	*left;
 	t_ast_node	*right;
-	t_span		span;
 
 	left = parse_simple_command(p);
 	if (!left)
@@ -207,16 +212,11 @@ static t_ast_node	*parse_pipeline(t_parser *p)
 		right = parse_simple_command(p);
 		if (!right)
 			return (ast_free(left), NULL);
-		span.start = left->span.start;
-		span.end = right->span.end;
 		old_left = left;
-		left = ast_new_binop(BIN_PIPE, old_left, right, span);
+		left = ast_new_binop(BIN_PIPE, old_left, right,
+				(t_span){old_left->span.start, right->span.end});
 		if (!left)
-		{
-			ast_free(old_left);
-			ast_free(right);
-			return (NULL);
-		}
+			return (free_left_right(old_left, right), NULL);
 	}
 	return (left);
 }
