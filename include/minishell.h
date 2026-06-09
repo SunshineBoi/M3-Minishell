@@ -97,6 +97,18 @@ typedef struct s_argv_builder
 	size_t	cap;
 }	t_argv_builder;
 
+typedef struct s_expand_ctx
+{
+	const char	*input;
+	char		**envp;
+	int			last_status;
+	t_qstate	state;
+	t_strbuf	sb;
+	t_wordlist	wl;
+	size_t		i;
+	int			word_in_progress;
+}	t_expand_ctx;
+
 
 typedef struct s_parser
 {
@@ -278,11 +290,43 @@ t_redir_type	tok_to_redir(t_token_type type);
 int			argv_builder_init(t_argv_builder *ab);
 int			argv_builder_push(t_argv_builder *ab, char *word);
 void		argv_builder_free(t_argv_builder *ab);
+void		free_argv(char **argv);
+int			push_words_to_builder(t_argv_builder *ab, char **words, size_t count);
 
 // utils_redir.c
 t_redir		*redir_new(t_redir_type type, const char *target);
 void		redir_free(t_redir *redir);
 t_redir		*redir_append(t_redir *head, t_redir *node);
+
+// utils_strbuf.c
+int			sb_init(t_strbuf *sb);
+int			sb_reserve(t_strbuf *sb, size_t needed);
+int			sb_push_char(t_strbuf *sb, char c);
+int			sb_push_str(t_strbuf *sb, const char *s);
+void		sb_free(t_strbuf *sb);
+
+// utils_wordlist.c
+int			wl_init(t_wordlist *wl);
+int			wl_push(t_wordlist *wl, char *word);
+void		wl_free(t_wordlist *wl);
+void		free_words(char **words);
+void		free_words_from(char **words, size_t start);
+
+// utils_env.c
+int			is_name_start(char c);
+size_t		var_name_len(const char *s);
+const char	*env_lookup(char **envp, const char *key, size_t key_len);
+char		*itoa_status(int status);
+
+// expand_helpers_1.c
+int			init_ctx(t_expand_ctx *ctx, const char *input, char **envp, int last_status);
+int			flush_word(t_wordlist *wl, t_strbuf *sb, int force_empty);
+int			append_unquoted_text(t_strbuf *sb, t_wordlist *wl, const char *text, int *word_in_progress);
+int			handle_whitespace(t_expand_ctx *ctx);
+int			handle_quotes(t_expand_ctx *ctx);
+
+// expand_helpers_2.c
+int			expand_step(t_expand_ctx *ctx);
 
 // expand.c
 /**
