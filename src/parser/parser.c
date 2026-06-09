@@ -1,7 +1,5 @@
 #include "minishell.h"
 
-
-
 static char	*dup_str(const char *s)
 {
 	size_t	len;
@@ -159,9 +157,11 @@ static t_ast_node	*parse_simple_command(t_parser *p)
 	redirs = NULL;
 	span.start = p->index;
 	span.end = p->index;
+	// loop all string until a pipe operator
 	while (p->cur && (p->cur->type == TOK_STR || is_redir_token(p->cur->type)))
 	{
 		tok = p->cur;
+		// if is a normal string
 		if (tok->type == TOK_STR)
 		{
 			char	*word = dup_str(tok->val);
@@ -176,6 +176,7 @@ static t_ast_node	*parse_simple_command(t_parser *p)
 			span.end = p->index;
 			continue ;
 		}
+		// if is a redirection operator
 		if (is_redir_token(tok->type))
 		{
 			t_redir	*new_redir;
@@ -234,6 +235,7 @@ static t_ast_node	*parse_pipeline(t_parser *p)
 		span.start = left->span.start;
 		span.end = right->span.end;
 		old_left = left;
+		// if pipe exist, combine both left and right node
 		left = ast_new_binop(BIN_PIPE, old_left, right, span);
 		if (!left)
 		{

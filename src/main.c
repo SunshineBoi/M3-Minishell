@@ -10,15 +10,30 @@ t_app	*init_app(char **envp)
 	app->envp = envp;
 	app->exitcode = EX_OK;
 	app->tokensll = NULL;
+	app->ast = NULL;
 	return (app);
 }
 
 void	process_prompt(t_app *app, char *str)
 {
 	app->tokensll = build_tokensll(str);
-	print_tokensll(app->tokensll); // ! for testing use, delete later
-	app->exitcode = EX_OK; // ! for time being to validate tokensll, remove it later
-	validate_tokensll(app);
+	if (validate_tokensll(app) == -1)
+		return (freetokensll(app->tokensll));
+	
+	app->ast = parse_tokens(app->tokensll);
+	freetokensll(app->tokensll);
+	app->tokensll = NULL;
+	if (!app->ast)
+		return ;
+
+	// ! todo: standardize update envp into app
+	// ! todo: standardize update exit code into app
+	if (expand_ast(app->ast, app->envp, app->exitcode) != 0)
+		return (ast_free(app->ast));
+
+	execute_ast(app, app->ast);
+	ast_free(app->ast);
+	app->ast = NULL;
 }
 
 int	minishell(char **envp)
@@ -31,16 +46,26 @@ int	minishell(char **envp)
 		hardexit();
 	while (1)
 	{
+		signals_at_prompt();
+		g_signal = 0;
 		prompt = readline("minishell$ ");
-		if (!prompt)
-			// ! how to free env copy, history, anything else?
-			// ! to print correct msg - "logout"
-			exit(EXIT_SUCCESS); // ctrl+d 
+		if (!prompt) // ctrl + d
+		{
+			ft_putstr_fd("exit\n", 1);
+			break ;
+		}
+		if (g_signal == SIGINT)
+		{
+			setexit(app, EX_SIG_BASE + SIGINT);
+			free(prompt);
+			continue ;
+		}
 		if (*prompt)
 			add_history(prompt);
 		process_prompt(app, prompt);
 		free(prompt);
 	}
+	// ! todo: free envp
 	free(app);
 	return (EXIT_SUCCESS);
 }
