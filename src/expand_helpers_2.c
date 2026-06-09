@@ -20,7 +20,7 @@ static int	handle_status(t_expand_ctx *ctx)
 {
 	char	*status;
 
-	status = itoa_status(ctx->shell->last_status);
+	status = itoa_status(ctx->last_status);
 	if (!status)
 		return (ERR_MALLOC);
 	if (ctx->state == Q_NONE)
@@ -50,7 +50,7 @@ static int	handle_env_var(t_expand_ctx *ctx)
 	key = ft_strndup((char *)ctx->input + ctx->i + 1, (int)len);
 	if (!key)
 		return (ERR_MALLOC);
-	val = env_lookup(ctx->shell->envp, key, len);
+	val = env_lookup(ctx->envp, key, len);
 	free(key);
 	if (ctx->state == Q_NONE && append_unquoted_text(&ctx->sb, &ctx->wl, val,
 			&ctx->word_in_progress) != 0)

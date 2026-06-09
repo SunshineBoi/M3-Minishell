@@ -1,9 +1,10 @@
 #include "minishell.h"
 
-int	init_ctx(t_expand_ctx *ctx, const char *input, t_shell *shell)
+int	init_ctx(t_expand_ctx *ctx, const char *input, char **envp, int last_status)
 {
 	ctx->input = input;
-	ctx->shell = shell;
+	ctx->envp = envp;
+	ctx->last_status = last_status;
 	if (sb_init(&ctx->sb) != 0)
 		return (ERR_MALLOC);
 	if (wl_init(&ctx->wl) != 0)

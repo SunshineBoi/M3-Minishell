@@ -1,12 +1,12 @@
 #include "minishell.h"
 
-int	expand_word(const char *input, t_shell *shell,
+int	expand_word(const char *input, char **envp, int last_status,
 		char ***out_words, size_t *out_count)
 {
 	t_expand_ctx	ctx;
 	int				res;
 
-	if (!out_words || !out_count || init_ctx(&ctx, input, shell) != 0)
+	if (!out_words || !out_count || init_ctx(&ctx, input, envp, last_status) != 0)
 		return (ERR_MALLOC);
 	while (input && input[ctx.i])
 	{
@@ -22,7 +22,7 @@ int	expand_word(const char *input, t_shell *shell,
 	return (0);
 }
 
-int	expand_argv(char **argv, t_shell *shell, char ***out_argv)
+int	expand_argv(char **argv, char **envp, int last_status, char ***out_argv)
 {
 	t_argv_builder	ab;
 	char			**words;
@@ -34,7 +34,7 @@ int	expand_argv(char **argv, t_shell *shell, char ***out_argv)
 	i = 0;
 	while (argv && argv[i])
 	{
-		if (expand_word(argv[i], shell, &words, &count) != 0)
+		if (expand_word(argv[i], envp, last_status, &words, &count) != 0)
 			return (argv_builder_free(&ab), ERR_MALLOC);
 		if (push_words_to_builder(&ab, words, count) != 0)
 			return (argv_builder_free(&ab), ERR_MALLOC);
@@ -44,7 +44,7 @@ int	expand_argv(char **argv, t_shell *shell, char ***out_argv)
 	return (0);
 }
 
-int	expand_redirs(t_redir *redir, t_shell *shell)
+int	expand_redirs(t_redir *redir, char **envp, int last_status)
 {
 	char	**words;
 	size_t	count;
@@ -56,7 +56,7 @@ int	expand_redirs(t_redir *redir, t_shell *shell)
 			redir = redir->next;
 			continue ;
 		}
-		if (expand_word(redir->target, shell, &words, &count) != 0)
+		if (expand_word(redir->target, envp, last_status, &words, &count) != 0)
 			return (ERR_MALLOC);
 		if (count != 1 || words[0][0] == '\0')
 		{
@@ -71,33 +71,33 @@ int	expand_redirs(t_redir *redir, t_shell *shell)
 	return (0);
 }
 
-static int	expand_cmd_node(t_cmd_node *cmd, t_shell *shell)
+static int	expand_cmd_node(t_cmd_node *cmd, char **envp, int last_status)
 {
 	char	**expanded;
 	int		res;
 
-	if (expand_argv(cmd->argv, shell, &expanded) != 0)
+	if (expand_argv(cmd->argv, envp, last_status, &expanded) != 0)
 		return (ERR_MALLOC);
 	free_argv(cmd->argv);
 	cmd->argv = expanded;
-	res = expand_redirs(cmd->redirs, shell);
+	res = expand_redirs(cmd->redirs, envp, last_status);
 	return (res);
 }
 
-int	expand_ast(t_ast_node *node, t_shell *shell)
+int	expand_ast(t_ast_node *node, char **envp, int last_status)
 {
 	int	res;
 
 	if (!node)
 		return (0);
 	if (node->type == NODE_CMD)
-		return (expand_cmd_node(&node->content.cmd, shell));
+		return (expand_cmd_node(&node->content.cmd, envp, last_status));
 	if (node->type == NODE_BINOP)
 	{
-		res = expand_ast(node->content.binop.left, shell);
+		res = expand_ast(node->content.binop.left, envp, last_status);
 		if (res != 0)
 			return (res);
-		return (expand_ast(node->content.binop.right, shell));
+		return (expand_ast(node->content.binop.right, envp, last_status));
 	}
 	return (0);
 }

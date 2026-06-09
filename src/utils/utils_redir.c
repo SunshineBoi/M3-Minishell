@@ -8,11 +8,7 @@ t_redir	*redir_new(t_redir_type type, const char *target)
 	if (!redir)
 		return (NULL);
 	redir->type = type;
-<<<<<<< HEAD
 	redir->target = ft_strndup((char *)target, ft_strlen(target));
-=======
-	redir->target = ft_strndup(target, ft_strlen(target));
->>>>>>> refs/remotes/origin/main
 	if (!redir->target)
 	{
 		free(redir);
