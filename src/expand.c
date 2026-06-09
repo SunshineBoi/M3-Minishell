@@ -281,134 +281,203 @@ static void	free_words_from(char **words, size_t start)
 	free(words);
 }
 
-int	expand_word(const char *input, char **envp, int last_status,
-		char ***out_words, size_t *out_count)
+typedef struct s_expand_ctx
 {
+	const char	*input;
+	char		**envp;
+	int			last_status;
 	t_qstate	state;
 	t_strbuf	sb;
 	t_wordlist	wl;
 	size_t		i;
 	int			word_in_progress;
+}	t_expand_ctx;
 
-	if (!out_words || !out_count)
+static int	init_ctx(t_expand_ctx *ctx, const char *input, char **envp,
+		int last_status)
+{
+	ctx->input = input;
+	ctx->envp = envp;
+	ctx->last_status = last_status;
+	if (sb_init(&ctx->sb) != 0)
 		return (ERR_MALLOC);
-	if (sb_init(&sb) != 0)
+	if (wl_init(&ctx->wl) != 0)
+	{
+		sb_free(&ctx->sb);
 		return (ERR_MALLOC);
-	if (wl_init(&wl) != 0)
-		return (sb_free(&sb), ERR_MALLOC);
-	state = Q_NONE;
-	word_in_progress = 0;
-	i = 0;
-	while (input && input[i])
-	{
-		if (state == Q_NONE && iswhitespace(input[i]))
-		{
-			if (word_in_progress)
-			{
-				if (flush_word(&wl, &sb, 1) != 0)
-					return (wl_free(&wl), sb_free(&sb), ERR_MALLOC);
-				word_in_progress = 0;
-			}
-			i++;
-			continue ;
-		}
-		if (input[i] == '\'' && state != Q_DQUOTE)
-		{
-			state = (state == Q_SQUOTE) ? Q_NONE : Q_SQUOTE;
-			word_in_progress = 1;
-			i++;
-			continue ;
-		}
-		if (input[i] == '"' && state != Q_SQUOTE)
-		{
-			state = (state == Q_DQUOTE) ? Q_NONE : Q_DQUOTE;
-			word_in_progress = 1;
-			i++;
-			continue ;
-		}
-		if (state == Q_DQUOTE && input[i] == '\\'
-			&& (input[i + 1] == '\\' || input[i + 1] == '"'
-				|| input[i + 1] == '$'))
-		{
-			word_in_progress = 1;
-			if (sb_push_char(&sb, input[i + 1]) != 0)
-				return (wl_free(&wl), sb_free(&sb), ERR_MALLOC);
-			i += 2;
-			continue ;
-		}
-		if (input[i] == '$' && state != Q_SQUOTE)
-		{
-			if (input[i + 1] == '?')
-			{
-				char	*status = itoa_status(last_status);
-				if (!status)
-					return (wl_free(&wl), sb_free(&sb), ERR_MALLOC);
-				if (state == Q_NONE)
-				{
-					if (append_unquoted_text(&sb, &wl, status,
-								&word_in_progress) != 0)
-						return (free(status), wl_free(&wl), sb_free(&sb),
-								ERR_MALLOC);
-				}
-				else
-				{
-					word_in_progress = 1;
-					if (sb_push_str(&sb, status) != 0)
-						return (free(status), wl_free(&wl), sb_free(&sb),
-								ERR_MALLOC);
-				}
-				free(status);
-				i += 2;
-				continue ;
-			}
-			if (input[i + 1] >= '0' && input[i + 1] <= '9')
-			{
-				i += 2;
-				continue ;
-			}
-			if (is_name_start(input[i + 1]))
-			{
-				size_t	len = var_name_len(input + i + 1);
-				char	*key = ft_strndup((char *)input + i + 1, (int)len);
-				const char	*val;
-				if (!key)
-					return (wl_free(&wl), sb_free(&sb), ERR_MALLOC);
-				val = env_lookup(envp, key, len);
-				free(key);
-				if (state == Q_NONE)
-				{
-					if (append_unquoted_text(&sb, &wl, val,
-								&word_in_progress) != 0)
-						return (wl_free(&wl), sb_free(&sb), ERR_MALLOC);
-				}
-				else
-				{
-					word_in_progress = 1;
-					if (sb_push_str(&sb, val) != 0)
-						return (wl_free(&wl), sb_free(&sb), ERR_MALLOC);
-				}
-				i += 1 + len;
-				continue ;
-			}
-			word_in_progress = 1;
-			if (sb_push_char(&sb, '$') != 0)
-				return (wl_free(&wl), sb_free(&sb), ERR_MALLOC);
-			i++;
-			continue ;
-		}
-		word_in_progress = 1;
-		if (sb_push_char(&sb, input[i]) != 0)
-			return (wl_free(&wl), sb_free(&sb), ERR_MALLOC);
-		i++;
 	}
-	if (word_in_progress)
+	ctx->state = Q_NONE;
+	ctx->word_in_progress = 0;
+	ctx->i = 0;
+	return (0);
+}
+
+static int	handle_whitespace(t_expand_ctx *ctx)
+{
+	if (ctx->state == Q_NONE && iswhitespace(ctx->input[ctx->i]))
 	{
-		if (flush_word(&wl, &sb, 1) != 0)
-			return (wl_free(&wl), sb_free(&sb), ERR_MALLOC);
+		if (ctx->word_in_progress)
+		{
+			if (flush_word(&ctx->wl, &ctx->sb, 1) != 0)
+				return (ERR_MALLOC);
+			ctx->word_in_progress = 0;
+		}
+		ctx->i++;
+		return (1);
 	}
-	*out_words = wl.items;
-	*out_count = wl.count;
-	sb_free(&sb);
+	return (0);
+}
+
+static int	handle_quotes(t_expand_ctx *ctx)
+{
+	if (ctx->input[ctx->i] == '\'' && ctx->state != Q_DQUOTE)
+	{
+		if (ctx->state == Q_SQUOTE)
+			ctx->state = Q_NONE;
+		else
+			ctx->state = Q_SQUOTE;
+		ctx->word_in_progress = 1;
+		ctx->i++;
+		return (1);
+	}
+	if (ctx->input[ctx->i] == '"' && ctx->state != Q_SQUOTE)
+	{
+		if (ctx->state == Q_DQUOTE)
+			ctx->state = Q_NONE;
+		else
+			ctx->state = Q_DQUOTE;
+		ctx->word_in_progress = 1;
+		ctx->i++;
+		return (1);
+	}
+	return (0);
+}
+
+static int	handle_backslash(t_expand_ctx *ctx)
+{
+	if (ctx->state == Q_DQUOTE && ctx->input[ctx->i] == '\\'
+		&& (ctx->input[ctx->i + 1] == '\\'
+			|| ctx->input[ctx->i + 1] == '"'
+			|| ctx->input[ctx->i + 1] == '$'))
+	{
+		ctx->word_in_progress = 1;
+		if (sb_push_char(&ctx->sb, ctx->input[ctx->i + 1]) != 0)
+			return (ERR_MALLOC);
+		ctx->i += 2;
+		return (1);
+	}
+	return (0);
+}
+
+static int	handle_status(t_expand_ctx *ctx)
+{
+	char	*status;
+
+	status = itoa_status(ctx->last_status);
+	if (!status)
+		return (ERR_MALLOC);
+	if (ctx->state == Q_NONE)
+	{
+		if (append_unquoted_text(&ctx->sb, &ctx->wl, status,
+				&ctx->word_in_progress) != 0)
+			return (free(status), ERR_MALLOC);
+	}
+	else
+	{
+		ctx->word_in_progress = 1;
+		if (sb_push_str(&ctx->sb, status) != 0)
+			return (free(status), ERR_MALLOC);
+	}
+	free(status);
+	ctx->i += 2;
+	return (1);
+}
+
+static int	handle_env_var(t_expand_ctx *ctx)
+{
+	size_t		len;
+	char		*key;
+	const char	*val;
+
+	len = var_name_len(ctx->input + ctx->i + 1);
+	key = ft_strndup((char *)ctx->input + ctx->i + 1, (int)len);
+	if (!key)
+		return (ERR_MALLOC);
+	val = env_lookup(ctx->envp, key, len);
+	free(key);
+	if (ctx->state == Q_NONE && append_unquoted_text(&ctx->sb, &ctx->wl, val,
+			&ctx->word_in_progress) != 0)
+		return (ERR_MALLOC);
+	if (ctx->state != Q_NONE)
+	{
+		ctx->word_in_progress = 1;
+		if (sb_push_str(&ctx->sb, val) != 0)
+			return (ERR_MALLOC);
+	}
+	ctx->i += 1 + len;
+	return (1);
+}
+
+static int	handle_variable(t_expand_ctx *ctx)
+{
+	if (ctx->input[ctx->i] == '$' && ctx->state != Q_SQUOTE)
+	{
+		if (ctx->input[ctx->i + 1] == '?')
+			return (handle_status(ctx));
+		if (ctx->input[ctx->i + 1] >= '0' && ctx->input[ctx->i + 1] <= '9')
+		{
+			ctx->i += 2;
+			return (1);
+		}
+		if (is_name_start(ctx->input[ctx->i + 1]))
+			return (handle_env_var(ctx));
+		ctx->word_in_progress = 1;
+		if (sb_push_char(&ctx->sb, '$') != 0)
+			return (ERR_MALLOC);
+		ctx->i++;
+		return (1);
+	}
+	return (0);
+}
+
+static int	expand_step(t_expand_ctx *ctx)
+{
+	int	res;
+
+	res = handle_whitespace(ctx);
+	if (res == 0)
+		res = handle_quotes(ctx);
+	if (res == 0)
+		res = handle_backslash(ctx);
+	if (res == 0)
+		res = handle_variable(ctx);
+	if (res != 0)
+		return (res);
+	ctx->word_in_progress = 1;
+	if (sb_push_char(&ctx->sb, ctx->input[ctx->i++]) != 0)
+		return (ERR_MALLOC);
+	return (0);
+}
+
+int	expand_word(const char *input, char **envp, int last_status,
+		char ***out_words, size_t *out_count)
+{
+	t_expand_ctx	ctx;
+	int				res;
+
+	if (!out_words || !out_count || init_ctx(&ctx, input, envp, last_status) != 0)
+		return (ERR_MALLOC);
+	while (input && input[ctx.i])
+	{
+		res = expand_step(&ctx);
+		if (res < 0)
+			return (wl_free(&ctx.wl), sb_free(&ctx.sb), res);
+	}
+	if (ctx.word_in_progress && flush_word(&ctx.wl, &ctx.sb, 1) != 0)
+		return (wl_free(&ctx.wl), sb_free(&ctx.sb), ERR_MALLOC);
+	*out_words = ctx.wl.items;
+	*out_count = ctx.wl.count;
+	sb_free(&ctx.sb);
 	return (0);
 }
 
