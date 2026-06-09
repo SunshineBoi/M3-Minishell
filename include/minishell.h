@@ -12,8 +12,16 @@
 # include <errno.h>
 # include <sys/wait.h>
 # include <limits.h>
-# include "parser.h"
+
+typedef enum e_qstate
+{
+	Q_NONE,
+	Q_SQUOTE,
+	Q_DQUOTE
+}	t_qstate;
+
 # include "ast.h"
+# include "parser.h"
 # include "exec.h"
 
 # define BUFFER_SIZE 4096
@@ -52,12 +60,7 @@ typedef enum e_exitcode
     EX_SIG_BASE    = 128  /**< Base offset for fatal signal terminations (EX_SIG_BASE + signum). */
 }	t_exitcode;
 
-typedef enum e_qstate
-{
-	Q_NONE,
-	Q_SQUOTE,
-	Q_DQUOTE
-}	t_qstate;
+
 
 typedef struct s_env
 {
@@ -224,6 +227,38 @@ void	freetoken(t_tokensll *token);
  */
 void	freetokensll(t_tokensll *sll);
 
+// utils_argv.c
+int		argv_builder_init(t_argv_builder *ab);
+int		argv_builder_push(t_argv_builder *ab, char *word);
+void	argv_builder_free(t_argv_builder *ab);
+void	free_argv(char **argv);
+int		push_words_to_builder(t_argv_builder *ab, char **words, size_t count);
+
+// utils_redir.c
+t_redir	*redir_new(t_redir_type type, const char *target);
+void	redir_free(t_redir *redir);
+t_redir	*redir_append(t_redir *head, t_redir *node);
+
+// utils_strbuf.c
+int		sb_init(t_strbuf *sb);
+int		sb_reserve(t_strbuf *sb, size_t needed);
+int		sb_push_char(t_strbuf *sb, char c);
+int		sb_push_str(t_strbuf *sb, const char *s);
+void	sb_free(t_strbuf *sb);
+
+// utils_wordlist.c
+int		wl_init(t_wordlist *wl);
+int		wl_push(t_wordlist *wl, char *word);
+void	wl_free(t_wordlist *wl);
+void	free_words(char **words);
+void	free_words_from(char **words, size_t start);
+
+// utils_env.c
+char	*itoa_status(int status);
+int		is_name_start(char c);
+size_t	var_name_len(const char *s);
+const char	*env_lookup(char **envp, const char *key, size_t key_len);
+
 // utils_str.c
 /**
  * @brief Compute the length of a null-terminated string.
@@ -282,14 +317,6 @@ int	isspecialsym(int ch);
  * @return Head of the token list, or NULL on failure.
  */
 t_tokensll	*build_tokensll(char *str);
-
-// parser.c
-/**
- * @brief Parse a token list into an AST.
- * @param tokens Head of the token list.
- * @return Root AST node, or NULL on parse error.
- */
-t_ast_node	*parse_tokens(t_tokensll *tokens);
 
 // expand.c
 /**
