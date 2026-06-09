@@ -8,6 +8,7 @@ t_app	*init_app(char **envp)
 	if (!app)
 		return (printerr_syscall(ERR_MALLOC), NULL);
 	app->envp = envp;
+	app->env_list = env_init(envp);
 	app->exitcode = EX_OK;
 	app->tokensll = NULL;
 	app->ast = NULL;
@@ -65,7 +66,7 @@ int	minishell(char **envp)
 		process_prompt(app, prompt);
 		free(prompt);
 	}
-	// ! todo: free envp
+	env_free(app->env_list);
 	free(app);
 	return (EXIT_SUCCESS);
 }

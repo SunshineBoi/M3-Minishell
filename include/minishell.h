@@ -11,6 +11,7 @@
 # include <signal.h>
 # include <errno.h>
 # include <sys/wait.h>
+# include <limits.h>
 # include "parser.h"
 # include "ast.h"
 # include "exec.h"
@@ -58,11 +59,19 @@ typedef enum e_qstate
 	Q_DQUOTE
 }	t_qstate;
 
+typedef struct s_env
+{
+	char			*key;
+	char			*value;
+	struct s_env	*next;
+}	t_env;
+
 typedef struct s_app
 {
 	t_tokensll	*tokensll;
 	t_ast_node	*ast;
 	char		**envp;
+	t_env		*env_list;
 	int			exitcode;
 }	t_app;
 
@@ -75,6 +84,15 @@ typedef struct s_app
  */
 void	hardexit();
 void	setexit(t_app *app, t_exitcode code);
+
+/* === env.c === */
+t_env	*env_init(char **envp);
+void	env_free(t_env *list);
+char	*env_get(t_env *list, const char *key);
+int		env_set(t_env **list, const char *key, const char *value);
+int		env_unset(t_env **list, const char *key);
+char	**env_to_array(t_env *list);
+void	env_free_array(char **arr);
 
 /* === utils_lexer_build.c === */
 int	quotes_build(char *str, t_tokensll *token, char quote);
@@ -161,6 +179,7 @@ char	*ft_realloc(char *old, size_t old_size, size_t new_size);
  */
 void	ft_putstr_fd(char *s, int fd);
 void	print_tokensll(t_tokensll *tokensll);
+void	errmsg(const char *prefix, const char *arg, const char *msg);
 
 // utils_printerr.c
 void	printerr_syscall(t_errcode code);
@@ -220,6 +239,19 @@ size_t	ft_strlen(const char *str);
  * @return Newly allocated string, or NULL on failure.
  */
 char	*ft_strndup(char *str, int len);
+
+/**
+ * @brief Compare two null-terminated strings.
+ * @param s1 First string.
+ * @param s2 Second string.
+ * @return Difference between the first differing characters.
+ */
+int	ft_strcmp(const char *s1, const char *s2);
+char	*ft_strdup(const char *s);
+char	*ft_strjoin(const char *s1, const char *s2);
+int		ft_strncmp(const char *s1, const char *s2, size_t n);
+char	*ft_strchr(const char *s, int c);
+char	*ft_itoa(int n);
 
 // utils_validator_tokens.c
 int	ispipe(t_token_type type);
@@ -302,5 +334,16 @@ int	expand_ast(t_ast_node *node, char **envp, int last_status);
 
 // * === exec.c === *
 int	execute_ast(t_app *app, t_ast_node *ast);
+int	is_builtin(const char *cmd);
+int	exec_builtin(char **argv, t_app *app);
+
+// * === builtins === *
+int	builtin_echo(char **argv);
+int	builtin_cd(char **argv, t_app *app);
+int	builtin_pwd(void);
+int	builtin_export(char **argv, t_app *app);
+int	builtin_unset(char **argv, t_app *app);
+int	builtin_env(t_app *app);
+int	builtin_exit(char **argv, t_app *app);
 
 #endif

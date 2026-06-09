@@ -188,18 +188,6 @@ char	**ft_splitbydelim(t_app *app, char *str, char delim)
 	return (lst);
 }
 
-int	ft_strncmp(const char *s1, const char *s2, size_t nbyte)
-{
-	while (nbyte > 0 && *s1 && *s1 == *s2)
-	{
-		s1++;
-		s2++;
-		nbyte--;
-	}
-	if (nbyte == 0)
-		return (0);
-	return ((unsigned char)*s1 - (unsigned char)*s2);
-}
 
 char	**getrawpathlst(t_app *app, char *match)
 {
@@ -227,26 +215,6 @@ char	**getrawpathlst(t_app *app, char *match)
 	return (rawpath);
 }
 
-char	*ft_strjoin(char *sa, char *sb)
-{
-	char	*new;
-	int		sa_size;
-	int		sb_size;
-	int		i;
-
-	sa_size = ft_strlen(sa);
-	sb_size = ft_strlen(sb);
-	new = malloc((sa_size + sb_size + 1));
-	if (!new)
-		return (NULL);
-	i = 0;
-	while (*sa)
-		new[i++] = *sa++;
-	while (*sb)
-		new[i++] = *sb++;
-	new[i] = '\0';
-	return (new);
-}
 
 char	*buildgoodpath(t_app *app, char *envp, char *cmd)
 {
