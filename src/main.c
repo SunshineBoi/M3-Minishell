@@ -1,44 +1,82 @@
-
-
 #include "minishell.h"
 
-// t_app	*init_app();
-
-void	process(char *str)
+t_app	*init_app(char **envp)
 {
-	t_tokensll	*token_sll;
+	t_app	*app;
 
-	token_sll = build_tokensll(str);
-	/* for testing use */
-	while (token_sll)
-	{
-		printf("[token val]: %s$", token_sll->val);
-		printf("\n\t[token type]: %d$\n", token_sll->type);
-		token_sll = token_sll->next;
-	}
+	app = malloc(sizeof(t_app));
+	if (!app)
+		return (printerr_syscall(ERR_MALLOC), NULL);
+	app->envp = envp;
+	app->exitcode = EX_OK;
+	app->tokensll = NULL;
+	app->ast = NULL;
+	return (app);
 }
 
-int	minishell()
+void	process_prompt(t_app *app, char *str)
 {
-	char	*input;
+	app->tokensll = build_tokensll(str);
+	if (validate_tokensll(app) == -1)
+		return (freetokensll(app->tokensll));
+	
+	app->ast = parse_tokens(app->tokensll);
+	freetokensll(app->tokensll);
+	app->tokensll = NULL;
+	if (!app->ast)
+		return ;
 
-	// ! later, think of where to init t_app
+	// ! todo: standardize update envp into app
+	// ! todo: standardize update exit code into app
+	if (expand_ast(app->ast, app->envp, app->exitcode) != 0)
+		return (ast_free(app->ast));
+
+	execute_ast(app, app->ast);
+	ast_free(app->ast);
+	app->ast = NULL;
+}
+
+int	minishell(char **envp)
+{
+	t_app	*app;
+	char	*prompt;
+
+	app = init_app(envp);
+	if (!app)
+		hardexit();
 	while (1)
 	{
-		input = readline("minishell$ ");
-		if (!input)
-			// ! how to free env copy, history, anything else?
-			// ! to print correct msg
-			exit(EXIT_SUCCESS); // ctrl+d 
-		if (*input)
-			add_history(input);
-		process(input);
-		free(input);
+		signals_at_prompt();
+		g_signal = 0;
+		prompt = readline("minishell$ ");
+		if (!prompt) // ctrl + d
+		{
+			ft_putstr_fd("exit\n", 1);
+			break ;
+		}
+		if (g_signal == SIGINT)
+		{
+			setexit(app, EX_SIG_BASE + SIGINT);
+			free(prompt);
+			continue ;
+		}
+		if (*prompt)
+			add_history(prompt);
+		process_prompt(app, prompt);
+		free(prompt);
 	}
+	// ! todo: free envp
+	free(app);
 	return (EXIT_SUCCESS);
 }
 
-int	main(void)
+int	main(int ac, char **av, char **envp)
 {
-	return (minishell());
+	(void)av;
+	if (ac != 1)
+	{
+		ft_putstr_fd("minishell: invalid number of arguments\n", 2);
+		return (EXIT_FAILURE);
+	}
+	return (minishell(envp));
 }

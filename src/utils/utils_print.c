@@ -1,5 +1,3 @@
-
-
 #include "minishell.h"
 
 /**
@@ -14,15 +12,13 @@ void	ft_putstr_fd(char *s, int fd)
 	write(fd, s, ft_strlen(s));
 }
 
-// ! for further review later
-/**
- * @brief Print an error message corresponding to the given code.
- * @param code Internal error code.
- */
-void	printerr(t_errcode code)
+void	print_tokensll(t_tokensll *tokensll)
 {
-	if (code == ERR_MALLOC)
-		perror("minishell");
-	else if (code == ERR_QUOTE)
-		ft_putstr_fd("minishell: Invalid quotes\n", 2);
+	/* for testing use */
+	while (tokensll)
+	{
+		printf("[token val]: %s$", tokensll->val);
+		printf("\n\t[token type]: %d$\n", tokensll->type);
+		tokensll = tokensll->next;
+	}
 }

@@ -1,17 +1,4 @@
-
 #include "minishell.h"
-
-/**
- * @brief Exit the program on fatal error codes.
- * @param code Internal error code to evaluate.
- * @return EXIT_FAILURE for error cases.
- */
-int	errexit(t_errcode code)
-{
-	if (code == EXIT_FAILURE)
-		return (exit(EXIT_FAILURE), EXIT_FAILURE);
-	return (EXIT_FAILURE);
-}
 
 // ! for further review later
 /**
@@ -20,6 +7,11 @@ int	errexit(t_errcode code)
 void	hardexit()
 {
 	exit(EX_ERR);
+}
+
+void	setexit(t_app *app, t_exitcode code)
+{
+	app->exitcode = code;
 }
 
 /*

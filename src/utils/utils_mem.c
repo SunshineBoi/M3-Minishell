@@ -1,6 +1,4 @@
-
 #include "minishell.h"
-
 
 /**
  * @brief Copy nbyte bytes from src to dest.

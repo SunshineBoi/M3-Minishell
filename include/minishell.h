@@ -4,20 +4,35 @@
 # include <unistd.h>
 # include <stdio.h>
 # include <stdlib.h>
+# include <fcntl.h>
 # include <readline/readline.h>
 # include <readline/history.h>
+# include <sys/types.h>
+# include <signal.h>
+# include <errno.h>
+# include <sys/wait.h>
+# include "parser.h"
 # include "ast.h"
+# include "exec.h"
 
 # define BUFFER_SIZE 4096
+# define APP "minishell"
 
-typedef enum s_errcode
+extern volatile sig_atomic_t g_signal;
+
+void	signals_at_prompt(void);
+
+typedef enum e_errcode
 {
-	ERR_MALLOC = -1,
-	ERR_QUOTE = -2,
-	ERR_CMDNEXEC = -3,
-	ERR_CMDNFOUND = -4,
-	ERR_PIPE = -5,
-	ERR_FORK = -6,
+	ERR_MALLOC = -1, // malloc/realloc failed
+	ERR_QUOTE = -2, // unclosed quote in lexer
+	ERR_SYNTAX = -3, // grammartically syntax error
+	ERR_CMDNEXEC = -4, // permission denied / is a directory / ambiguous redir
+	ERR_CMDNFOUND = -5, // command not found in PATH
+	ERR_PIPE = -6, // pipe() syscall failed
+	ERR_FORK = -7, // fork() syscall failed
+	ERR_CD = -8,
+	ERR_REDIR = -9,
 }	t_errcode;
 
 /**
@@ -26,47 +41,15 @@ typedef enum s_errcode
  * These codes are returned to the operating system upon process termination
  * to indicate the outcome of the execution.
  */
-typedef enum e_exit_code
+typedef enum e_exitcode
 {
-    EX_OK          = 0,   /**< Program executed successfully. */
-    EX_ERR         = 1,   /**< General catchall for minor/generic errors. */
+    EX_OK = 0,   /**< Program executed successfully. */
+    EX_ERR = 1,   /**< General catchall for minor/generic errors. */
+	EX_SYNTAX = 2,
     EX_CMD_NEXEC   = 126, /**< Command invoked but is not executable. */
     EX_CMD_NOTFOUND = 127, /**< Command cannot be found in PATH. */
     EX_SIG_BASE    = 128  /**< Base offset for fatal signal terminations (EX_SIG_BASE + signum). */
-} exit_code_t;
-
-typedef enum s_token_type
-{
-	TOK_STR,
-	TOK_PIPE,
-	TOK_DIRIN,
-	TOK_DIROUT,
-	TOK_DIRAPPND,
-	TOK_HEREDOC,
-	TOK_EOF,
-}	t_token_type;
-
-typedef struct s_tokensll
-{
-	char				*val;
-	long long			val_size;
-	t_token_type		type;
-	struct s_tokensll	*next;
-}	t_tokensll;
-
-typedef struct s_sll_ops
-{
-	t_tokensll	*curr;
-	t_tokensll	*prev;
-	t_tokensll	*head;
-}	t_sll_ops;
-
-typedef struct s_shell
-{
-	char		**envp;
-	int			last_status;
-}	t_shell;
-
+}	t_exitcode;
 
 typedef enum e_qstate
 {
@@ -75,46 +58,21 @@ typedef enum e_qstate
 	Q_DQUOTE
 }	t_qstate;
 
-typedef struct s_strbuf
+typedef struct s_app
 {
-	char	*buf;
-	size_t	len;
-	size_t	cap;
-}	t_strbuf;
+	t_tokensll	*tokensll;
+	t_ast_node	*ast;
+	char		**envp;
+	int			exitcode;
+}	t_app;
 
-typedef struct s_wordlist
-{
-	char	**items;
-	size_t	count;
-	size_t	cap;
-}	t_wordlist;
-
-typedef struct s_argv_builder
-{
-	char	**argv;
-	size_t	count;
-	size_t	cap;
-}	t_argv_builder;
-
-typedef struct s_expand_ctx
-{
-	const char	*input;
-	t_shell		*shell;
-	t_qstate	state;
-	t_strbuf	sb;
-	t_wordlist	wl;
-	size_t		i;
-	int			word_in_progress;
-}	t_expand_ctx;
-
-
-typedef struct s_parser
-{
-	/* Parser-local cursor. t_app keeps only the token-list head. */
-	t_tokensll	*cur;
-	int			index;
-}	t_parser;
-
+/* === utils_exit.c === */
+/**
+ * @brief Terminate the program immediately.
+ *
+ * Intended for unrecoverable error paths where cleanup is either not
+ * possible or not required.
+ */
 // utils_exit.c
 /**
  * @brief Terminate the program immediately.
@@ -123,32 +81,42 @@ typedef struct s_parser
  * possible or not required.
  */
 void	hardexit();
+void	setexit(t_app *app, t_exitcode code);
 
-// utils_lexer_token.c
+/* === utils_lexer_build.c === */
+int	quotes_build(char *str, t_tokensll *token, char quote);
+int	char_build(char ch, t_tokensll *token);
+int backslash_build(char *str, t_tokensll *token);
+
+// * utils_lexer_token.c
 /**
  * @brief Initialize a pipe operator token.
  * @param token Token node to populate.
  * @return 0 on success, nonzero on failure.
  */
 int	build_ops_pipe(t_tokensll *token);
+
 /**
  * @brief Initialize a redirection output (>) token.
  * @param token Token node to populate.
  * @return 0 on success, nonzero on failure.
  */
 int	build_ops_dirout(t_tokensll *token);
+
 /**
  * @brief Initialize a redirection append (>>) token.
  * @param token Token node to populate.
  * @return 0 on success, nonzero on failure.
  */
 int	build_ops_dirappnd(t_tokensll *token);
+
 /**
  * @brief Initialize a redirection input (<) token.
  * @param token Token node to populate.
  * @return 0 on success, nonzero on failure.
  */
 int	build_ops_dirin(t_tokensll *token);
+
 /**
  * @brief Initialize a heredoc (<<) token.
  * @param token Token node to populate.
@@ -156,7 +124,7 @@ int	build_ops_dirin(t_tokensll *token);
  */
 int	build_ops_heredoc(t_tokensll *token);
 
-// utils_lexer.c
+// * utils_lexer.c
 /**
  * @brief Build a string token from the given buffer.
  * @param token Token node to populate.
@@ -164,6 +132,7 @@ int	build_ops_heredoc(t_tokensll *token);
  * @return 0 on success, nonzero on failure.
  */
 int	string_build(t_tokensll *token, char *str);
+
 /**
  * @brief Build a special token (operator) from the input.
  * @param str Input buffer starting at the operator.
@@ -181,6 +150,7 @@ int	special_build(char *str, t_tokensll *token);
  * @return Destination pointer.
  */
 void	*ft_memcpy(void *dest, const void *src, size_t nbyte);
+
 /**
  * @brief Reallocate a string buffer to a new size.
  * @param old Existing buffer (may be NULL).
@@ -197,11 +167,18 @@ char	*ft_realloc(char *old, size_t old_size, size_t new_size);
  * @param fd File descriptor to write to.
  */
 void	ft_putstr_fd(char *s, int fd);
-/**
- * @brief Print a human-readable error message for an error code.
- * @param code Internal error code.
- */
-void	printerr(t_errcode code);
+void	print_tokensll(t_tokensll *tokensll);
+
+// utils_printerr.c
+void	printerr_syscall(t_errcode code);
+void	printerr_syntax(char *tokval);
+void	printerr_quotes();
+void	printerr_redir(char *filename);
+void	printerr_cmdnfound(char *cmd);
+void	ft_perror(char *msg);
+
+// utils_printerr_builtin.c
+void	printerr_cd(char *filename);
 
 // utils_sll.c
 /**
@@ -209,22 +186,26 @@ void	printerr(t_errcode code);
  * @return Pointer to a new token node, or NULL on failure.
  */
 t_tokensll	*init_token();
+
 /**
  * @brief Allocate and initialize sll iterator helpers.
  * @return Pointer to ops structure, or NULL on failure.
  */
 t_sll_ops	*init_sll_ops();
+
 /**
  * @brief Count the number of nodes in a token list.
  * @param sll Head of the list.
  * @return Number of nodes.
  */
 int	ft_sllsize(t_tokensll *sll);
+
 /**
  * @brief Free a single token node and its contents.
  * @param token Token node to free.
  */
 void	freetoken(t_tokensll *token);
+
 /**
  * @brief Free a token list and all its nodes.
  * @param sll Head of the list.
@@ -238,13 +219,21 @@ void	freetokensll(t_tokensll *sll);
  * @return Length excluding the null terminator.
  */
 size_t	ft_strlen(const char *str);
+
 /**
  * @brief Duplicate up to len characters into a new string.
  * @param str Source buffer.
  * @param len Maximum number of characters to copy.
  * @return Newly allocated string, or NULL on failure.
  */
-char	*ft_strndup(const char *str, int len);
+char	*ft_strndup(char *str, int len);
+
+// utils_validator_tokens.c
+int	ispipe(t_token_type type);
+int	isredir(t_token_type type);
+int	is_valid_pipe(t_tokensll *tokens);
+int	is_valid_redir(t_tokensll *tokens);
+int	validate_tokensll(t_app *app);
 
 // utils_validator.c
 /**
@@ -253,6 +242,7 @@ char	*ft_strndup(const char *str, int len);
  * @return Nonzero if whitespace, zero otherwise.
  */
 int	iswhitespace(int ch);
+
 /**
  * @brief Check if a character is a special shell symbol.
  * @param ch Character code to test.
@@ -275,89 +265,49 @@ t_tokensll	*build_tokensll(char *str);
  * @return Root AST node, or NULL on parse error.
  */
 t_ast_node	*parse_tokens(t_tokensll *tokens);
-void		advance(t_parser *p);
-
-// parser_helpers.c
-int			parse_word(t_parser *p, t_argv_builder *ab);
-int			parse_redir(t_parser *p, t_redir **redirs);
-void		free_ab_redirs(t_argv_builder *ab, t_redir *redirs);
-int			is_redir_token(t_token_type type);
-t_redir_type	tok_to_redir(t_token_type type);
-
-// utils_argv.c
-int			argv_builder_init(t_argv_builder *ab);
-int			argv_builder_push(t_argv_builder *ab, char *word);
-void		argv_builder_free(t_argv_builder *ab);
-void		free_argv(char **argv);
-int			push_words_to_builder(t_argv_builder *ab, char **words, size_t count);
-
-// utils_redir.c
-t_redir		*redir_new(t_redir_type type, const char *target);
-void		redir_free(t_redir *redir);
-t_redir		*redir_append(t_redir *head, t_redir *node);
-
-// utils_strbuf.c
-int			sb_init(t_strbuf *sb);
-int			sb_reserve(t_strbuf *sb, size_t needed);
-int			sb_push_char(t_strbuf *sb, char c);
-int			sb_push_str(t_strbuf *sb, const char *s);
-void		sb_free(t_strbuf *sb);
-
-// utils_wordlist.c
-int			wl_init(t_wordlist *wl);
-int			wl_push(t_wordlist *wl, char *word);
-void		wl_free(t_wordlist *wl);
-void		free_words(char **words);
-void		free_words_from(char **words, size_t start);
-
-// utils_env.c
-int			is_name_start(char c);
-size_t		var_name_len(const char *s);
-const char	*env_lookup(char **envp, const char *key, size_t key_len);
-char		*itoa_status(int status);
-
-// expand_helpers_1.c
-int			init_ctx(t_expand_ctx *ctx, const char *input, t_shell *shell);
-int			flush_word(t_wordlist *wl, t_strbuf *sb, int force_empty);
-int			append_unquoted_text(t_strbuf *sb, t_wordlist *wl, const char *text, int *word_in_progress);
-int			handle_whitespace(t_expand_ctx *ctx);
-int			handle_quotes(t_expand_ctx *ctx);
-
-// expand_helpers_2.c
-int			expand_step(t_expand_ctx *ctx);
 
 // expand.c
 /**
  * @brief Expand variables, quotes, and field-splitting for a single word.
  * @param input Raw word with quotes preserved from the lexer.
- * @param shell Shell context containing envp and last_status.
+ * @param envp Environment array (KEY=VALUE).
+ * @param last_status Last command exit status.
  * @param out_words Output NULL-terminated array of expanded words.
  * @param out_count Output count of words.
  * @return 0 on success, ERR_MALLOC on failure.
  */
-int	expand_word(const char *input, t_shell *shell,
+int	expand_word(const char *input, char **envp, int last_status,
 		char ***out_words, size_t *out_count);
+
 /**
  * @brief Expand a command argv list into a new argv list.
  * @param argv Original argv list.
- * @param shell Shell context containing envp and last_status.
+ * @param envp Environment array (KEY=VALUE).
+ * @param last_status Last command exit status.
  * @param out_argv Output NULL-terminated argv list.
  * @return 0 on success, ERR_MALLOC on failure.
  */
-int	expand_argv(char **argv, t_shell *shell, char ***out_argv);
+int	expand_argv(char **argv, char **envp, int last_status, char ***out_argv);
+
 /**
  * @brief Expand redirection targets in-place.
  * @param redir Redirection list.
- * @param shell Shell context containing envp and last_status.
+ * @param envp Environment array (KEY=VALUE).
+ * @param last_status Last command exit status.
  * @return 0 on success, ERR_* on failure.
  */
-int	expand_redirs(t_redir *redir, t_shell *shell);
+int	expand_redirs(t_redir *redir, char **envp, int last_status);
+
 /**
  * @brief Expand all command nodes in an AST recursively.
  * @param node Root node.
- * @param shell Shell context containing envp and last_status.
+ * @param envp Environment array (KEY=VALUE).
+ * @param last_status Last command exit status.
  * @return 0 on success, ERR_* on failure.
  */
-int	expand_ast(t_ast_node *node, t_shell *shell);
+int	expand_ast(t_ast_node *node, char **envp, int last_status);
+
+// * === exec.c === *
+int	execute_ast(t_app *app, t_ast_node *ast);
 
 #endif
