@@ -428,35 +428,41 @@ static void	free_argv(char **argv)
 	free(argv);
 }
 
+static int	push_words_to_builder(t_argv_builder *ab, char **words,
+		size_t count)
+{
+	size_t	j;
+
+	j = 0;
+	while (j < count)
+	{
+		if (argv_builder_push(ab, words[j]) != 0)
+		{
+			free_words_from(words, j);
+			return (ERR_MALLOC);
+		}
+		j++;
+	}
+	free(words);
+	return (0);
+}
+
 int	expand_argv(char **argv, char **envp, int last_status, char ***out_argv)
 {
 	t_argv_builder	ab;
-	size_t		i;
+	char			**words;
+	size_t			count;
+	size_t			i;
 
-	if (!out_argv)
-		return (ERR_MALLOC);
-	if (argv_builder_init(&ab) != 0)
+	if (!out_argv || argv_builder_init(&ab) != 0)
 		return (ERR_MALLOC);
 	i = 0;
 	while (argv && argv[i])
 	{
-		char	**words;
-		size_t	count;
-		size_t	j;
-
 		if (expand_word(argv[i], envp, last_status, &words, &count) != 0)
 			return (argv_builder_free(&ab), ERR_MALLOC);
-		j = 0;
-		while (j < count)
-		{
-			if (argv_builder_push(&ab, words[j]) != 0)
-			{
-				free_words_from(words, j);
-				return (argv_builder_free(&ab), ERR_MALLOC);
-			}
-			j++;
-		}
-		free(words);
+		if (push_words_to_builder(&ab, words, count) != 0)
+			return (argv_builder_free(&ab), ERR_MALLOC);
 		i++;
 	}
 	*out_argv = ab.argv;
