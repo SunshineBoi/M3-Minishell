@@ -4,11 +4,23 @@
 # include <unistd.h>
 # include <stdio.h>
 # include <stdlib.h>
+# include <fcntl.h>
 # include <readline/readline.h>
 # include <readline/history.h>
+# include <sys/types.h>
+# include <signal.h>
+# include <errno.h>
+# include <sys/wait.h>
+# include "parser.h"
 # include "ast.h"
+# include "exec.h"
 
 # define BUFFER_SIZE 4096
+# define APP "minishell"
+
+extern volatile sig_atomic_t g_signal;
+
+void	signals_at_prompt(void);
 
 typedef enum e_errcode
 {
@@ -46,67 +58,15 @@ typedef enum e_qstate
 	Q_DQUOTE
 }	t_qstate;
 
-typedef enum e_token_type
-{
-	TOK_STR,
-	TOK_PIPE,
-	TOK_DIRIN,
-	TOK_DIROUT,
-	TOK_DIRAPPND,
-	TOK_HEREDOC,
-	TOK_EOF,
-}	t_token_type;
-
-typedef struct s_tokensll
-{
-	char				*val;
-	long long			val_size;
-	t_token_type		type;
-	struct s_tokensll	*next;
-}	t_tokensll;
-
-typedef struct s_sll_ops
-{
-	t_tokensll	*curr;
-	t_tokensll	*prev;
-	t_tokensll	*head;
-}	t_sll_ops;
-
 typedef struct s_app
 {
 	t_tokensll	*tokensll;
+	t_ast_node	*ast;
 	char		**envp;
 	int			exitcode;
 }	t_app;
 
-typedef struct s_strbuf
-{
-	char	*buf;
-	size_t	len;
-	size_t	cap;
-}	t_strbuf;
-
-typedef struct s_wordlist
-{
-	char	**items;
-	size_t	count;
-	size_t	cap;
-}	t_wordlist;
-
-typedef struct s_argv_builder
-{
-	char	**argv;
-	size_t	count;
-	size_t	cap;
-}	t_argv_builder;
-
-typedef struct s_parser
-{
-	t_tokensll	*cur;
-	int			index;
-}	t_parser;
-
-// utils_exit.c
+/* === utils_exit.c === */
 /**
  * @brief Terminate the program immediately.
  *
@@ -114,8 +74,9 @@ typedef struct s_parser
  * possible or not required.
  */
 void	hardexit();
+void	setexit(t_app *app, t_exitcode code);
 
-// * utils_lexer_build.c
+/* === utils_lexer_build.c === */
 int	quotes_build(char *str, t_tokensll *token, char quote);
 int	char_build(char ch, t_tokensll *token);
 int backslash_build(char *str, t_tokensll *token);
@@ -207,6 +168,7 @@ void	printerr_syntax(char *tokval);
 void	printerr_quotes();
 void	printerr_redir(char *filename);
 void	printerr_cmdnfound(char *cmd);
+void	ft_perror(char *msg);
 
 // utils_printerr_builtin.c
 void	printerr_cd(char *filename);
@@ -337,5 +299,8 @@ int	expand_redirs(t_redir *redir, char **envp, int last_status);
  * @return 0 on success, ERR_* on failure.
  */
 int	expand_ast(t_ast_node *node, char **envp, int last_status);
+
+// * === exec.c === *
+int	execute_ast(t_app *app, t_ast_node *ast);
 
 #endif

@@ -1,8 +1,6 @@
 #ifndef AST_H
 # define AST_H
 
-# include <stddef.h>
-
 typedef enum e_node_type
 {
 	NODE_CMD,
@@ -25,6 +23,12 @@ typedef enum e_redir_type
 	REDIR_HEREDOC
 }	t_redir_type;
 
+typedef struct s_span
+{
+	int	start;
+	int	end;
+}	t_span;
+
 typedef struct s_redir
 {
 	t_redir_type		type;
@@ -33,18 +37,12 @@ typedef struct s_redir
 	struct s_redir	*next;
 }	t_redir;
 
-typedef struct s_span
-{
-	int	start;
-	int	end;
-}	t_span;
-
 typedef struct s_ast_node t_ast_node;
 
 typedef struct s_cmd_node
 {
-	char	**argv;
-	t_redir	*redirs;
+	char		**argv;
+	t_redir		*redirs;
 }	t_cmd_node;
 
 typedef struct s_binop_node

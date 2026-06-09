@@ -47,13 +47,13 @@ int	validate_tokensll(t_app *app)
 
 	tokensll = app->tokensll;
 	if (!tokensll)
-		return (1);
+		return (0);
 	// first token cannot be pipe
 	if (ispipe(tokensll->type))
 	{
 		app->exitcode = EX_SYNTAX;
 		printerr_syntax(tokensll->val);
-		return (0);
+		return (-1);
 	}
 	while (tokensll)
 	{
@@ -62,8 +62,8 @@ int	validate_tokensll(t_app *app)
 		else if (isredir(tokensll->type) && !is_valid_redir(tokensll))
 			app->exitcode = EX_SYNTAX;
 		if (app->exitcode == EX_SYNTAX)
-			return (0);
+			return (-1);
 		tokensll = tokensll->next;
 	}
-	return (1);
+	return (0);
 }
