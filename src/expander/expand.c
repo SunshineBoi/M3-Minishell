@@ -60,7 +60,7 @@ int	expand_redirs(t_redir *redir, char **envp, int last_status)
 			return (ERR_MALLOC);
 		if (count != 1 || words[0][0] == '\0')
 		{
-			free_argv(words);
+			freelst(words);
 			return (ERR_CMDNEXEC);
 		}
 		free(redir->target);
@@ -78,7 +78,7 @@ static int	expand_cmd_node(t_cmd_node *cmd, char **envp, int last_status)
 
 	if (expand_argv(cmd->argv, envp, last_status, &expanded) != 0)
 		return (ERR_MALLOC);
-	free_argv(cmd->argv);
+	freelst(cmd->argv);
 	cmd->argv = expanded;
 	res = expand_redirs(cmd->redirs, envp, last_status);
 	return (res);

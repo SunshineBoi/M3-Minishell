@@ -192,7 +192,7 @@ static size_t	env_count(t_env *list)
  * @brief Convert the environment list to a NULL-terminated char** array.
  *
  * Only variables with non-NULL values are included (matching `env` behavior).
- * Caller must free with env_free_array().
+ * Caller must free with freelst().
  */
 char	**env_to_array(t_env *list)
 {
@@ -210,11 +210,11 @@ char	**env_to_array(t_env *list)
 		{
 			tmp = ft_strjoin(list->key, "=");
 			if (!tmp)
-				return (env_free_array(arr), NULL);
+				return (freelst(arr), NULL);
 			arr[i] = ft_strjoin(tmp, list->value);
 			free(tmp);
 			if (!arr[i])
-				return (env_free_array(arr), NULL);
+				return (freelst(arr), NULL);
 			i++;
 		}
 		list = list->next;
@@ -223,20 +223,3 @@ char	**env_to_array(t_env *list)
 	return (arr);
 }
 
-/**
- * @brief Free a NULL-terminated string array (e.g. from env_to_array).
- */
-void	env_free_array(char **arr)
-{
-	size_t	i;
-
-	if (!arr)
-		return ;
-	i = 0;
-	while (arr[i])
-	{
-		free(arr[i]);
-		i++;
-	}
-	free(arr);
-}

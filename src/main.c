@@ -26,12 +26,8 @@ void	process_prompt(t_app *app, char *str)
 	app->tokensll = NULL;
 	if (!app->ast)
 		return ;
-
-	// ! todo: standardize update envp into app
-	// ! todo: standardize update exit code into app
 	if (expand_ast(app->ast, app->envp, app->exitcode) != 0)
 		return (ast_free(app->ast));
-
 	execute_ast(app, app->ast);
 	ast_free(app->ast);
 	app->ast = NULL;

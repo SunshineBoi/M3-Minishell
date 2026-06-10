@@ -50,20 +50,20 @@ static t_redir *make_redir(const char *target, t_redir_type type)
 	return redir;
 }
 
-static void free_argv_test(char **argv)
-{
-	size_t i;
+// static void free_argv_test(char **argv)
+// {
+// 	size_t i;
 
-	if (!argv)
-		return;
-	i = 0;
-	while (argv[i])
-	{
-		free(argv[i]);
-		i++;
-	}
-	free(argv);
-}
+// 	if (!argv)
+// 		return;
+// 	i = 0;
+// 	while (argv[i])
+// 	{
+// 		free(argv[i]);
+// 		i++;
+// 	}
+// 	free(argv);
+// }
 
 static void free_redir_test(t_redir *redir)
 {
@@ -145,6 +145,7 @@ Test(ast, ast_new_cmd_malloc_fail_returns_null)
 	g_malloc_fail_countdown = -1;
 	cr_assert_null(node);
 
-	free_argv_test(argv);
+	// free_argv_test(argv);
+	freelst(argv);
 	free_redir_test(redir);
 }
