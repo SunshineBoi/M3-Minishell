@@ -49,7 +49,7 @@ void	ast_free(t_ast_node *node)
 		return ;
 	if (node->type == NODE_CMD)
 	{
-		free_argv(node->content.cmd.argv);
+		freelst(node->content.cmd.argv);
 		free_redirs(node->content.cmd.redirs);
 	}
 	else if (node->type == NODE_BINOP)

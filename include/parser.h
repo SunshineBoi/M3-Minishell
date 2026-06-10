@@ -77,14 +77,15 @@ void		free_ab_redirs(t_argv_builder *ab, t_redir *redirs);
 int			is_redir_token(t_token_type type);
 t_redir_type	tok_to_redir(t_token_type type);
 
-/* === expand_helpers === */
-int			init_ctx(t_expand_ctx *ctx, const char *input, char **envp,
-				int last_status);
-int			flush_word(t_wordlist *wl, t_strbuf *sb, int force_empty);
-int			append_unquoted_text(t_strbuf *sb, t_wordlist *wl,
-				const char *text, int *word_in_progress);
-int			handle_whitespace(t_expand_ctx *ctx);
-int			handle_quotes(t_expand_ctx *ctx);
-int			expand_step(t_expand_ctx *ctx);
+/* === utils_argv.c === */
+int		argv_builder_init(t_argv_builder *ab);
+int		argv_builder_push(t_argv_builder *ab, char *word);
+void	argv_builder_free(t_argv_builder *ab);
+int		push_words_to_builder(t_argv_builder *ab, char **words, size_t count);
+
+/* === utils_redir.c === */
+t_redir	*redir_new(t_redir_type type, const char *target);
+void	redir_free(t_redir *redir);
+t_redir	*redir_append(t_redir *head, t_redir *node);
 
 #endif

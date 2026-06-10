@@ -20,3 +20,17 @@ int	isspecialsym(int ch)
 {
 	return (ch == '|' || ch == '>' || ch == '<');
 }
+
+int	ft_strhaschr(char *str, char ch)
+{
+	int	i;
+
+	i = 0;
+	while (str[i])
+	{
+		if (str[i] == ch)
+			return (1);
+		i++;
+	}
+	return (0);
+}

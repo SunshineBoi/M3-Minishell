@@ -51,20 +51,20 @@ void	argv_builder_free(t_argv_builder *ab)
 	ab->cap = 0;
 }
 
-void	free_argv(char **argv)
-{
-	size_t	i;
+// void	free_argv(char **argv)
+// {
+// 	size_t	i;
 
-	if (!argv)
-		return ;
-	i = 0;
-	while (argv[i])
-	{
-		free(argv[i]);
-		i++;
-	}
-	free(argv);
-}
+// 	if (!argv)
+// 		return ;
+// 	i = 0;
+// 	while (argv[i])
+// 	{
+// 		free(argv[i]);
+// 		i++;
+// 	}
+// 	free(argv);
+// }
 
 int	push_words_to_builder(t_argv_builder *ab, char **words,
 		size_t count)

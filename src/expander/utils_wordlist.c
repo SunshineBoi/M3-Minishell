@@ -51,20 +51,20 @@ void	wl_free(t_wordlist *wl)
 	wl->cap = 0;
 }
 
-void	free_words(char **words)
-{
-	size_t	i;
+// void	free_words(char **words)
+// {
+// 	size_t	i;
 
-	if (!words)
-		return ;
-	i = 0;
-	while (words[i])
-	{
-		free(words[i]);
-		i++;
-	}
-	free(words);
-}
+// 	if (!words)
+// 		return ;
+// 	i = 0;
+// 	while (words[i])
+// 	{
+// 		free(words[i]);
+// 		i++;
+// 	}
+// 	free(words);
+// }
 
 void	free_words_from(char **words, size_t start)
 {

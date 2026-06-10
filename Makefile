@@ -14,8 +14,7 @@ MINISHELL_HEADER_DIR = include
 TEST_DIR = test
 
 # Source Files
-SRC_FILES := $(filter-out $(SRC_DIR)/parser/%.c, \
-	$(shell find $(SRC_DIR) -type f -name '*.c'))
+SRC_FILES := $(shell find $(SRC_DIR) -type f -name '*.c')
 OBJ_FILES := $(patsubst $(SRC_DIR)/%.c, $(BUILD_DIR)/%.o, $(SRC_FILES))
 TEST_SRC_FILES := $(filter-out $(SRC_DIR)/main.c, $(SRC_FILES))
 TEST_OBJ_FILES := $(patsubst $(SRC_DIR)/%.c, $(BUILD_DIR)/%.o, $(TEST_SRC_FILES))

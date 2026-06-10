@@ -42,20 +42,3 @@ void	ft_perror(char *msg)
 	ft_putstr_fd(strerror(errno), 2);
 	ft_putstr_fd("\n", 2);
 }
-
-/*
-void	ft_perror(char *msg, int cmd_is_path)
-{
-	if ((errno == ENOENT || errno == ENOTDIR) && cmd_is_path == 0)
-		printerr_cmdnfound(msg);
-	else
-	{
-		// minishell: {msg}: permission denied
-		ft_putstr_fd(APP": ", 2);
-		ft_putstr_fd(msg, 2);
-		ft_putstr_fd(": ", 2);
-		ft_putstr_fd(strerror(errno), 2);
-		ft_putstr_fd("\n", 2);
-	}
-}
-*/
