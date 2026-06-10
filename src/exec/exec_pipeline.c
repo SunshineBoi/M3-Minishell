@@ -1,13 +1,13 @@
 #include "minishell.h"
 
-static void	_flatten_cmds(t_ast_node *ast, t_cmd_node **cmds, int *i)
+static void	flatten_cmds(t_ast_node *ast, t_cmd_node **cmds, int *i)
 {
 	if (!ast)
 		return ;
 	if (ast->type == NODE_BINOP)
 	{
-		_flatten_cmds(ast->content.binop.left, cmds, i);
-		_flatten_cmds(ast->content.binop.right, cmds, i);
+		flatten_cmds(ast->content.binop.left, cmds, i);
+		flatten_cmds(ast->content.binop.right, cmds, i);
 	}
 	else
 	{
@@ -30,7 +30,7 @@ t_cmd_node	**setup_cmds(t_app *app, t_ast_node *ast, t_pipeops *pipeops)
 	if (!cmds)
 		return (setexit(app, EX_ERR), perror(APP), NULL);
 	i = 0;
-	_flatten_cmds(ast, cmds, &i);
+	flatten_cmds(ast, cmds, &i);
 	return (cmds);
 }
 

@@ -137,7 +137,7 @@ void	errmsg(const char *prefix, const char *arg, const char *msg);
 void	printerr_syscall(t_errcode code);
 void	printerr_syntax(char *tokval);
 void	printerr_quotes(void);
-void	printerr_redir(char *filename);
+// void	printerr_redir(char *filename);
 void	printerr_cmdnfound(char *cmd);
 void	ft_perror(char *msg);
 
