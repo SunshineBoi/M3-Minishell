@@ -50,7 +50,11 @@ static void	process_prompt(t_app *app, char *str)
 	if (!app->tokensll)
 		return ;
 	if (validate_tokensll(app) == -1)
-		return (freetokensll(app->tokensll));
+	{
+		freetokensll(app->tokensll);
+		app->tokensll = NULL;
+		return ;
+	}
 	app->ast = parse_tokens(app->tokensll);
 	freetokensll(app->tokensll);
 	app->tokensll = NULL;
