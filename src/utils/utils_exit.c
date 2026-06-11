@@ -4,7 +4,7 @@
 /**
  * @brief Terminate immediately with a nonzero exit code.
  */
-void	hardexit()
+void	hardexit(void)
 {
 	exit(EX_ERR);
 }

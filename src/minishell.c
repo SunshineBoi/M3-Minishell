@@ -22,7 +22,7 @@ t_app	*init_app(char **envp)
 		return (printerr_syscall(ERR_MALLOC), NULL);
 	app->env_list = env_init(envp);
 	if (!app->env_list)
-		return (free(app), NULL); // ! should i quit if no envp path? can we guarantee to have envp at the start?
+		return (free(app), NULL);
 	app->envp = env_to_array(app->env_list);
 	if (!app->envp)
 		return (env_free(app->env_list), free(app), NULL);
@@ -46,7 +46,7 @@ static void	update_envp(t_app *app)
 
 static void	process_prompt(t_app *app, char *str)
 {
-	app->tokensll = build_tokensll(str);
+	app->tokensll = build_tokensll(app, str);
 	if (!app->tokensll)
 		return ;
 	if (validate_tokensll(app) == -1)
@@ -56,7 +56,7 @@ static void	process_prompt(t_app *app, char *str)
 	app->tokensll = NULL;
 	if (!app->ast)
 		return ;
-	if (expand_ast(app->ast, app->envp, app->exitcode) != 0)
+	if (expand_ast(app, app->ast) != 0)
 	{
 		ast_free(app->ast);
 		app->ast = NULL;
@@ -94,5 +94,6 @@ int	minishell(t_app *app)
 		process_prompt(app, prompt);
 		free(prompt);
 	}
+	rl_clear_history();
 	return (app->exitcode);
 }
