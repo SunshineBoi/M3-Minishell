@@ -34,21 +34,23 @@ void	env_free(t_env *list)
  * @param value Variable value (duplicated, may be NULL).
  * @return New node, or NULL on malloc failure.
  */
-static t_env	*env_new_node(const char *key, const char *value)
+t_env	*env_new_node(const char *key, const char *value)
 {
 	t_env	*node;
-
+	
+	if (!key || !*key)
+		return (NULL);
 	node = malloc(sizeof(t_env));
 	if (!node)
-		return (NULL);
+		return (perror(APP), NULL);
 	node->key = ft_strdup(key);
 	if (!node->key)
-		return (free(node), NULL);
+		return (free(node), printerr_syscall(ERR_MALLOC), NULL);
 	if (value)
 	{
 		node->value = ft_strdup(value);
 		if (!node->value)
-			return (free(node->key), free(node), NULL);
+			return (free(node->key), free(node), printerr_syscall(ERR_MALLOC), NULL);
 	}
 	else
 		node->value = NULL;
@@ -56,7 +58,7 @@ static t_env	*env_new_node(const char *key, const char *value)
 	return (node);
 }
 
-static int	_env_append(t_env **head, t_env **tail, char *entry)
+static int	env_append(t_env **head, t_env **tail, char *entry)
 {
 	t_env	*node;
 	char	*eq;
@@ -88,8 +90,8 @@ t_env	*env_init(char **envp)
 	i = 0;
 	while (envp && envp[i])
 	{
-		if (_env_append(&head, &tail, envp[i]) == -1)
-			return (env_free(head), perror(APP), NULL);
+		if (env_append(&head, &tail, envp[i]) == -1)
+			return (env_free(head), NULL);
 		i++;
 	}
 	return (head);

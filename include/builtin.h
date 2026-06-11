@@ -6,6 +6,7 @@ int	exec_builtin(char **argv, t_app *app);
 int	builtin_echo(char **argv);
 int	builtin_cd(char **argv, t_app *app);
 int	builtin_pwd(void);
+int	is_valid_identifier(const char *name);
 int	builtin_export(char **argv, t_app *app);
 int	builtin_unset(char **argv, t_app *app);
 int	builtin_env(t_app *app);

@@ -36,6 +36,7 @@ typedef enum e_errcode
 	ERR_FORK = -7,
 	ERR_CD = -8,
 	ERR_REDIR = -9,
+	ERR_BADINPUT = -10,
 }	t_errcode;
 
 /**
@@ -143,7 +144,7 @@ void	ft_perror(char *msg);
 
 
 /* === utils_printerr_builtin.c === */
-void	printerr_cd(char *filename);
+// void	printerr_cd(char *filename);
 
 
 /* === utils_str.c === */
@@ -194,12 +195,18 @@ int		isspecialsym(int ch);
  * @return 1 if found, 0 otherwise.
  */
 int		ft_strhaschr(char *str, char ch);
-
+int		is_numeric(const char *s, long long *val);
 
 /* === signals.c === */
 void	handlesig_prompt(int sig);
 void	signals_at_prompt(void);
 void	signals_ignore(void);
 void	signals_default(void);
+
+/* === minishell.c === */
+void	free_app(t_app *app);
+t_app	*init_app(char **envp);
+int		minishell(t_app *app);
+
 
 #endif
