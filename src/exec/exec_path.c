@@ -17,7 +17,7 @@ char	*buildgoodpath(t_app *app, char *envp, char *cmd)
 	return (path);
 }
 
-static char	*_cmdwithpath(t_app *app, char *cmd)
+static char	*cmdwithpath(t_app *app, char *cmd)
 {
 	char	*goodpath;
 
@@ -30,7 +30,7 @@ static char	*_cmdwithpath(t_app *app, char *cmd)
 	return (goodpath);
 }
 
-static char	*_matchcmdpath(t_app *app, char **pathlst, char *cmd)
+static char	*matchcmdpath(t_app *app, char **pathlst, char *cmd)
 {
 	int		i;
 	char	*goodpath;
@@ -43,7 +43,7 @@ static char	*_matchcmdpath(t_app *app, char **pathlst, char *cmd)
 			goodpath = buildgoodpath(app, ".", cmd);
 		else
 			goodpath = buildgoodpath(app, pathlst[i], cmd);
-		if (goodpath || app->exitcode == EACCES)
+		if (goodpath || app->exitcode == EX_CMD_NEXEC)
 			break ;
 		i++;
 	}
@@ -66,7 +66,7 @@ char	*resolvecmdpath(t_app *app, char **argv)
 	cmd = argv[0];
 	if (ft_strhaschr(cmd, '/'))
 	{
-		goodpath = _cmdwithpath(app, cmd);
+		goodpath = cmdwithpath(app, cmd);
 		if (!goodpath)
 			return (NULL);
 		return (goodpath);
@@ -74,7 +74,7 @@ char	*resolvecmdpath(t_app *app, char **argv)
 	pathlst = getrawpathlst(app, "PATH=");
 	if (!pathlst)
 		return (setexit(app, EX_CMD_NOTFOUND), printerr_cmdnfound(cmd), NULL);
-	goodpath = _matchcmdpath(app, pathlst, cmd);
+	goodpath = matchcmdpath(app, pathlst, cmd);
 	if (!goodpath)
 		return (freelst(pathlst), NULL);
 	freelst(pathlst);

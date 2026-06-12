@@ -19,7 +19,7 @@ static void	_update_ops(t_sll_ops *ops)
  * @param str Input buffer at the current position.
  * @return Characters consumed, or ERR_* on failure.
  */
-static int	build_token(t_sll_ops *ops, char *str)
+static int	build_token(t_app *app, t_sll_ops *ops, char *str)
 {
 	int	toklen;
 
@@ -38,7 +38,7 @@ static int	build_token(t_sll_ops *ops, char *str)
 		// process quotes and text
 		toklen = string_build(ops->curr, str);
 		if (toklen == ERR_QUOTE)
-			return (freetoken(ops->curr), ERR_QUOTE);
+			return (setexit(app, EX_SYNTAX), freetoken(ops->curr), ERR_QUOTE);
 		else if (toklen == ERR_MALLOC)
 			return (freetoken(ops->curr), ERR_MALLOC);
 	}
@@ -50,7 +50,7 @@ static int	build_token(t_sll_ops *ops, char *str)
  * @param str Input command line string.
  * @return Head of the token list, or NULL on failure.
  */
-t_tokensll	*build_tokensll(char *str)
+t_tokensll	*build_tokensll(t_app *app, char *str)
 {
 	int	toklen;
 	t_tokensll	*head;
@@ -66,7 +66,7 @@ t_tokensll	*build_tokensll(char *str)
 			str++;
 		if (!*str)
 			break ;
-		toklen = build_token(ops, str);
+		toklen = build_token(app, ops, str);
 		if (toklen == ERR_QUOTE)
 			return (freetokensll(ops->head), free(ops), NULL);
 		else if (toklen == ERR_MALLOC)

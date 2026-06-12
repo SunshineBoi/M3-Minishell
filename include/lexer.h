@@ -7,7 +7,7 @@
  * @param str Input command line string.
  * @return Head of the token list, or NULL on failure.
  */
-t_tokensll	*build_tokensll(char *str);
+t_tokensll	*build_tokensll(t_app *app, char *str);
 
 /* === utils_lexer_build.c === */
 int			quotes_build(char *str, t_tokensll *token, char quote);

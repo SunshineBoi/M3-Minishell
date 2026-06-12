@@ -21,5 +21,5 @@ int	builtin_env(t_app *app)
 		}
 		cur = cur->next;
 	}
-	return (0);
+	return (EX_OK);
 }

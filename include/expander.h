@@ -40,7 +40,7 @@ int	expand_redirs(t_redir *redir, char **envp, int last_status);
  * @param last_status Last command exit status.
  * @return 0 on success, ERR_* on failure.
  */
-int	expand_ast(t_ast_node *node, char **envp, int last_status);
+int	expand_ast(t_app *app, t_ast_node *node);
 
 /* === expand_helpers_1.c / expand_helpers_2.c === */
 int	init_ctx(t_expand_ctx *ctx, const char *input, char **envp,
