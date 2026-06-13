@@ -141,3 +141,43 @@ Test(parser, parse_invalid_syntax)
 	cr_assert_null(root);
 	freetokensll(tokens);
 }
+
+Test(parser, parse_redirection_only_command)
+{
+	t_tokensll *tokens;
+	t_ast_node *root;
+	t_redir *r;
+
+	tokens = build_tokensll("> out");
+	cr_assert_not_null(tokens);
+	root = parse_tokens(tokens);
+	cr_assert_not_null(root);
+	cr_assert_eq(root->type, NODE_CMD);
+	cr_assert_not_null(root->content.cmd.argv);
+	cr_assert_null(root->content.cmd.argv[0]);
+	r = root->content.cmd.redirs;
+	cr_assert_not_null(r);
+	cr_assert_eq(r->type, REDIR_OUT);
+	cr_assert_str_eq(r->target, "out");
+	cr_assert_null(r->next);
+
+	ast_free(root);
+	freetokensll(tokens);
+}
+
+Test(parser, parse_empty_quoted_command)
+{
+	t_tokensll *tokens;
+	t_ast_node *root;
+
+	tokens = build_tokensll("\"\"");
+	cr_assert_not_null(tokens);
+	root = parse_tokens(tokens);
+	cr_assert_not_null(root);
+	cr_assert_eq(root->type, NODE_CMD);
+	cr_assert_str_eq(root->content.cmd.argv[0], "\"\"");
+	cr_assert_null(root->content.cmd.argv[1]);
+
+	ast_free(root);
+	freetokensll(tokens);
+}
