@@ -181,6 +181,46 @@ static char	*expand_heredoc_line(const char *line, char **envp, int last_status)
 	return (sb.buf);
 }
 
+static int	write_expanded(t_app *app, int fd, char *line, int is_quoted)
+{
+	char	*expanded;
+
+	if (!is_quoted)
+	{
+		expanded = expand_heredoc_line(line, app->envp, app->exitcode);
+		free(line);
+		if (!expanded)
+			return (-1);
+		line = expanded;
+	}
+	write(fd, line, ft_strlen(line));
+	write(fd, "\n", 1);
+	free(line);
+	return (0);
+}
+
+static int	read_heredoc_loop(t_app *app, int *pipe_fds, const char *delim, int is_quoted)
+{
+	char	*line;
+
+	while (1)
+	{
+		line = readline("> ");
+		if (g_signal == SIGINT)
+			return (free(line), -1);
+		if (!line)
+		{
+			ft_putstr_fd("minishell: warning: here-document delimited by end-of-file\n", 2);
+			return (0);
+		}
+		if (ft_strcmp(line, delim) == 0)
+			return (free(line), 0);
+		if (write_expanded(app, pipe_fds[1], line, is_quoted) == -1)
+			return (-1);
+	}
+	return (0);
+}
+
 static int	collect_one_heredoc(t_app *app, t_redir *redir)
 {
 	int					pipe_fds[2];
@@ -188,65 +228,24 @@ static int	collect_one_heredoc(t_app *app, t_redir *redir)
 	int					is_quoted;
 	struct sigaction	sa;
 	struct sigaction	old_sa;
-	char				*line;
-	char				*expanded;
+	int					res;
 
 	delim = parse_heredoc_delimiter(redir->target, &is_quoted);
 	if (!delim)
 		return (-1);
 	if (pipe(pipe_fds) == -1)
-	{
-		free(delim);
-		return (-1);
-	}
+		return (free(delim), -1);
 	sigemptyset(&sa.sa_mask);
 	sa.sa_flags = 0;
 	sa.sa_handler = handlesig_heredoc;
 	sigaction(SIGINT, &sa, &old_sa);
-	while (1)
-	{
-		line = readline("> ");
-		if (g_signal == SIGINT)
-		{
-			free(line);
-			free(delim);
-			close(pipe_fds[0]);
-			close(pipe_fds[1]);
-			sigaction(SIGINT, &old_sa, NULL);
-			return (-1);
-		}
-		if (!line)
-		{
-			ft_putstr_fd("minishell: warning: here-document delimited by end-of-file\n", 2);
-			break ;
-		}
-		if (ft_strcmp(line, delim) == 0)
-		{
-			free(line);
-			break ;
-		}
-		if (!is_quoted)
-		{
-			expanded = expand_heredoc_line(line, app->envp, app->exitcode);
-			free(line);
-			if (!expanded)
-			{
-				free(delim);
-				close(pipe_fds[0]);
-				close(pipe_fds[1]);
-				sigaction(SIGINT, &old_sa, NULL);
-				return (-1);
-			}
-			line = expanded;
-		}
-		write(pipe_fds[1], line, ft_strlen(line));
-		write(pipe_fds[1], "\n", 1);
-		free(line);
-	}
+	res = read_heredoc_loop(app, pipe_fds, delim, is_quoted);
+	sigaction(SIGINT, &old_sa, NULL);
 	free(delim);
 	close(pipe_fds[1]);
+	if (res == -1)
+		return (close(pipe_fds[0]), -1);
 	redir->fd = pipe_fds[0];
-	sigaction(SIGINT, &old_sa, NULL);
 	return (0);
 }
 
