@@ -91,7 +91,6 @@ static t_app make_app(void)
 
 	app.env_list = NULL;
 	app.exitcode = 0;
-	app.argv0 = "minishell";
 	return (app);
 }
 

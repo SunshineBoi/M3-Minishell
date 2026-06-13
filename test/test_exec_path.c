@@ -16,6 +16,23 @@ static t_env *make_env_with_path(const char *path)
 	return (list);
 }
 
+static char	*resolve_command_path(const char *cmd, t_env *env_list)
+{
+	t_app	app;
+	char	*argv[2];
+	char	*resolved;
+
+	app.env_list = env_list;
+	app.envp = env_to_array(env_list);
+	app.exitcode = 0;
+	argv[0] = (char *)cmd;
+	argv[1] = NULL;
+	resolved = resolvecmdpath(&app, argv);
+	freelst(app.envp);
+	return (resolved);
+}
+
+
 static int make_executable(const char *dir, const char *name, char *out,
 		size_t out_len)
 {
@@ -97,7 +114,7 @@ Test(exec_path, empty_path_entry_uses_cwd)
 	list = make_env_with_path(":/bin");
 	resolved = resolve_command_path("herecmd", list);
 	cr_assert_not_null(resolved);
-	cr_assert_str_eq(resolved, "herecmd");
+	cr_assert_str_eq(resolved, "./herecmd");
 	free(resolved);
 	env_free(list);
 	chdir(cwd);

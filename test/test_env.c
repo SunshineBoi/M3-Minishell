@@ -45,6 +45,6 @@ Test(env, to_array_skips_null_values)
 	cr_assert_str_eq(arr[1], "A=1");
 	cr_assert_null(arr[2]);
 
-	env_free_array(arr);
+	freelst(arr);
 	env_free(list);
 }

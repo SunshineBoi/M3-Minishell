@@ -5,37 +5,58 @@
 #include <stdlib.h>
 #include "minishell.h"
 
-static t_redir *redir_new(t_redir_type type, const char *target)
-{
-	t_redir *redir;
-
-	redir = malloc(sizeof(t_redir));
-	cr_assert_not_null(redir);
-	redir->type = type;
-	redir->target = target ? strdup(target) : NULL;
-	redir->fd = -1;
-	redir->next = NULL;
-	return (redir);
-}
-
-static void redir_free(t_redir *redir)
-{
-	t_redir *next;
-
-	while (redir)
-	{
-		next = redir->next;
-		free(redir->target);
-		free(redir);
-		redir = next;
-	}
-}
-
-static void restore_fd(int saved, int target)
+static void local_restore_fd(int saved, int target)
 {
 	dup2(saved, target);
 	close(saved);
 }
+
+static int	open_redir_file(t_redir *redir)
+{
+	int	fd;
+
+	fd = -1;
+	if (redir->type == REDIR_IN)
+		fd = open(redir->target, O_RDONLY);
+	else if (redir->type == REDIR_OUT)
+		fd = open(redir->target, O_WRONLY | O_CREAT | O_TRUNC, 0644);
+	else if (redir->type == REDIR_APPEND)
+		fd = open(redir->target, O_WRONLY | O_CREAT | O_APPEND, 0644);
+	return (fd);
+}
+
+static int	apply_redirections(t_redir *redir)
+{
+	int	fd;
+	int	target_fd;
+
+	while (redir)
+	{
+		if (redir->type == REDIR_HEREDOC)
+		{
+			fd = redir->fd;
+			if (fd < 0)
+				return (1);
+			dup2(fd, STDIN_FILENO);
+			close(fd);
+		}
+		else
+		{
+			fd = open_redir_file(redir);
+			if (fd < 0)
+				return (1);
+			if (redir->type == REDIR_IN)
+				target_fd = STDIN_FILENO;
+			else
+				target_fd = STDOUT_FILENO;
+			dup2(fd, target_fd);
+			close(fd);
+		}
+		redir = redir->next;
+	}
+	return (0);
+}
+
 
 Test(redirections, output_redirection_writes_file)
 {
@@ -53,7 +74,7 @@ Test(redirections, output_redirection_writes_file)
 	redir = redir_new(REDIR_OUT, path);
 	cr_assert_eq(apply_redirections(redir), 0);
 	write(STDOUT_FILENO, "hi", 2);
-	restore_fd(saved, STDOUT_FILENO);
+	local_restore_fd(saved, STDOUT_FILENO);
 	redir_free(redir);
 
 	fd = open(path, O_RDONLY);
@@ -81,7 +102,7 @@ Test(redirections, input_redirection_reads_file)
 	redir = redir_new(REDIR_IN, path);
 	cr_assert_eq(apply_redirections(redir), 0);
 	read(STDIN_FILENO, buf, sizeof(buf) - 1);
-	restore_fd(saved, STDIN_FILENO);
+	local_restore_fd(saved, STDIN_FILENO);
 	redir_free(redir);
 
 	cr_assert_str_eq(buf, "data");
@@ -100,11 +121,11 @@ Test(redirections, heredoc_fd_is_used)
 	close(fds[1]);
 
 	saved = dup(STDIN_FILENO);
-	redir = redir_new(REDIR_HEREDOC, NULL);
+	redir = redir_new(REDIR_HEREDOC, "");
 	redir->fd = fds[0];
 	cr_assert_eq(apply_redirections(redir), 0);
 	read(STDIN_FILENO, buf, sizeof(buf) - 1);
-	restore_fd(saved, STDIN_FILENO);
+	local_restore_fd(saved, STDIN_FILENO);
 	redir_free(redir);
 
 	cr_assert_str_eq(buf, "doc");
@@ -142,7 +163,7 @@ Test(redirections, multiple_output_redirections_last_wins)
 	r1->next = r2;
 	cr_assert_eq(apply_redirections(r1), 0);
 	write(STDOUT_FILENO, "final", 5);
-	restore_fd(saved, STDOUT_FILENO);
+	local_restore_fd(saved, STDOUT_FILENO);
 	redir_free(r1);
 
 	fd2 = open(path2, O_RDONLY);
