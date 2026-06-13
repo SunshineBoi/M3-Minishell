@@ -19,12 +19,12 @@ void	printerr_quotes()
 	ft_putstr_fd("minishell: Invalid quotes\n", 2);
 }
 
-// void	printerr_redir(char *filename)
-// {
-// 	ft_putstr_fd("minishell: ", 2);
-// 	ft_putstr_fd(filename, 2);
-// 	ft_putstr_fd(": no such file or directory\n", 2);
-// }
+void	printerr_redir(char *filename)
+{
+	ft_putstr_fd("minishell: ", 2);
+	ft_putstr_fd(filename, 2);
+	ft_putstr_fd(": no such file or directory\n", 2);
+}
 
 void	printerr_cmdnfound(char *cmd)
 {
@@ -37,11 +37,8 @@ void	ft_perror(char *msg)
 {
 	// minishell: {msg}: permission denied
 	ft_putstr_fd(APP": ", 2);
-	if (msg)
-	{
-		ft_putstr_fd(msg, 2);
-		ft_putstr_fd(": ", 2);
-	}
+	ft_putstr_fd(msg, 2);
+	ft_putstr_fd(": ", 2);
 	ft_putstr_fd(strerror(errno), 2);
 	ft_putstr_fd("\n", 2);
 }

@@ -4,7 +4,7 @@
  * @brief Allocate and initialize a token node.
  * @return New token node, or NULL on failure.
  */
-t_tokensll	*init_token(void)
+t_tokensll	*init_token()
 {
 	t_tokensll	*new;
 
@@ -22,7 +22,7 @@ t_tokensll	*init_token(void)
  * @brief Allocate and initialize list traversal helpers.
  * @return New ops structure, or NULL on failure.
  */
-t_sll_ops	*init_sll_ops(void)
+t_sll_ops	*init_sll_ops()
 {
 	t_sll_ops	*ops;
 

@@ -20,7 +20,7 @@ int	countbydelim(char *str, char delim)
 	return (count);
 }
 
-static int	splithelper(char **target, char *str, char delim)
+static int	_splithelper(char **target, char *str, char delim)
 {
 	int	lenword;
 	int	n_delim;
@@ -55,7 +55,7 @@ char	**ft_splitbydelim(t_app *app, char *str, char delim)
 	i = 0;
 	while (*str)
 	{
-		size = splithelper(&(lst[i]), str, delim);
+		size = _splithelper(&(lst[i]), str, delim);
 		if (size == -1)
 			return (setexit(app, EX_ERR), perror(APP), freelst(lst), NULL);
 		i++;

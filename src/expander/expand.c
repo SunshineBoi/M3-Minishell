@@ -61,7 +61,7 @@ int	expand_redirs(t_redir *redir, char **envp, int last_status)
 		if (count != 1 || words[0][0] == '\0')
 		{
 			freelst(words);
-			return (errmsg(NULL, NULL, "ambiguous redirect"), ERR_CMDNEXEC);
+			return (ERR_CMDNEXEC);
 		}
 		free(redir->target);
 		redir->target = words[0];
@@ -71,45 +71,33 @@ int	expand_redirs(t_redir *redir, char **envp, int last_status)
 	return (0);
 }
 
-// t_cmd_node *cmd, char **envp, int last_status
-static int	expand_cmd_node(t_app *app, t_cmd_node *cmd)
+static int	expand_cmd_node(t_cmd_node *cmd, char **envp, int last_status)
 {
-	char		**expanded;
-	int			res;
-	char		**envp;
-	int			last_status;
+	char	**expanded;
+	int		res;
 
-	envp = app->envp;
-	last_status = app->exitcode;
 	if (expand_argv(cmd->argv, envp, last_status, &expanded) != 0)
 		return (ERR_MALLOC);
 	freelst(cmd->argv);
 	cmd->argv = expanded;
-	if (!cmd->argv[0])
-	{
-		freelst(cmd->argv);
-		cmd->argv = NULL;
-	}
 	res = expand_redirs(cmd->redirs, envp, last_status);
-	if (res != 0)
-		setexit(app, EX_ERR);
 	return (res);
 }
 
-int	expand_ast(t_app *app, t_ast_node *node)
+int	expand_ast(t_ast_node *node, char **envp, int last_status)
 {
 	int	res;
 
 	if (!node)
 		return (0);
 	if (node->type == NODE_CMD)
-		return (expand_cmd_node(app, &node->content.cmd));
+		return (expand_cmd_node(&node->content.cmd, envp, last_status));
 	if (node->type == NODE_BINOP)
 	{
-		res = expand_ast(app, node->content.binop.left);
+		res = expand_ast(node->content.binop.left, envp, last_status);
 		if (res != 0)
 			return (res);
-		return (expand_ast(app, node->content.binop.right));
+		return (expand_ast(node->content.binop.right, envp, last_status));
 	}
 	return (0);
 }
