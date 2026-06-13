@@ -55,7 +55,7 @@ int	execute_ast(t_app *app, t_ast_node *ast)
 		return (-1);
 	if (ast->type == NODE_CMD)
 	{
-		if (!ast->content.cmd.argv)
+		if (!ast->content.cmd.argv || !ast->content.cmd.argv[0])
 		{	// no cmd but has redirects: bash creates/truncates the file
 			if (open_redirs(app, &ast->content.cmd) == -1)
 				return (close_redirsfd(&ast->content.cmd), -1);

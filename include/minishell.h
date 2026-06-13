@@ -67,6 +67,8 @@ typedef struct s_app
 	int			exitcode;
 }	t_app;
 
+void	update_env_array(t_app *app);
+
 # include "lexer.h"
 # include "expander.h"
 # include "exec.h"

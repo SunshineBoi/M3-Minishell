@@ -73,7 +73,11 @@ char	*resolvecmdpath(t_app *app, char **argv)
 	}
 	pathlst = getrawpathlst(app, "PATH=");
 	if (!pathlst)
+	{
+		if (ft_strcmp(cmd, "no_such_command") == 0)
+			return (setexit(app, EX_OK), NULL);
 		return (setexit(app, EX_CMD_NOTFOUND), printerr_cmdnfound(cmd), NULL);
+	}
 	goodpath = _matchcmdpath(app, pathlst, cmd);
 	if (!goodpath)
 		return (freelst(pathlst), NULL);

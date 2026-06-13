@@ -11,6 +11,7 @@ static void	update_pwd(t_app *app, const char *old_pwd)
 		env_set(&app->env_list, "OLDPWD", old_pwd);
 	if (getcwd(cwd, sizeof(cwd)))
 		env_set(&app->env_list, "PWD", cwd);
+	update_env_array(app);
 }
 
 /**
@@ -40,7 +41,6 @@ int	builtin_cd(char **argv, t_app *app)
 		target = env_get(app->env_list, "OLDPWD");
 		if (!target)
 			return (errmsg("cd", NULL, "OLDPWD not set"), 1);
-		printf("%s\n", target);
 	}
 	else
 		target = argv[1];

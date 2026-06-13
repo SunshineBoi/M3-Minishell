@@ -90,6 +90,9 @@ static t_app make_app(void)
 	t_app app;
 
 	app.env_list = NULL;
+	app.envp = NULL;
+	app.tokensll = NULL;
+	app.ast = NULL;
 	app.exitcode = 0;
 	return (app);
 }

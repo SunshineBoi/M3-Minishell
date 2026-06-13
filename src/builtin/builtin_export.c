@@ -128,5 +128,6 @@ int	builtin_export(char **argv, t_app *app)
 			ret = 1;
 		i++;
 	}
+	update_env_array(app);
 	return (ret);
 }

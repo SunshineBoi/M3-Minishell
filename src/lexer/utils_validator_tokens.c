@@ -41,6 +41,17 @@ int	is_valid_redir(t_tokensll *tokens)
 	return (1);
 }
 
+static int	has_unsupported_ops(const char *val)
+{
+	if (!val)
+		return (0);
+	if (ft_strcmp(val, ";") == 0 || ft_strcmp(val, "&") == 0
+		|| ft_strcmp(val, "&&") == 0 || ft_strcmp(val, "(") == 0
+		|| ft_strcmp(val, ")") == 0)
+		return (1);
+	return (0);
+}
+
 int	validate_tokensll(t_app *app)
 {
 	t_tokensll	*tokensll;
@@ -61,6 +72,11 @@ int	validate_tokensll(t_app *app)
 			app->exitcode = EX_SYNTAX;
 		else if (isredir(tokensll->type) && !is_valid_redir(tokensll))
 			app->exitcode = EX_SYNTAX;
+		else if (tokensll->type == TOK_STR && has_unsupported_ops(tokensll->val))
+		{
+			app->exitcode = EX_SYNTAX;
+			printerr_syntax(tokensll->val);
+		}
 		if (app->exitcode == EX_SYNTAX)
 			return (-1);
 		tokensll = tokensll->next;

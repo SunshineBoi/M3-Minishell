@@ -50,5 +50,6 @@ int	builtin_unset(char **argv, t_app *app)
 			env_unset(&app->env_list, argv[i]);
 		i++;
 	}
+	update_env_array(app);
 	return (ret);
 }

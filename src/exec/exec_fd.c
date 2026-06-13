@@ -199,13 +199,35 @@ static int	write_expanded(t_app *app, int fd, char *line, int is_quoted)
 	return (0);
 }
 
+static char	*get_next_line_non_interactive(void)
+{
+	char	*line;
+	size_t	len;
+	ssize_t	read;
+
+	line = NULL;
+	len = 0;
+	read = getline(&line, &len, stdin);
+	if (read == -1)
+	{
+		free(line);
+		return (NULL);
+	}
+	if (read > 0 && line[read - 1] == '\n')
+		line[read - 1] = '\0';
+	return (line);
+}
+
 static int	read_heredoc_loop(t_app *app, int *pipe_fds, const char *delim, int is_quoted)
 {
 	char	*line;
 
 	while (1)
 	{
-		line = readline("> ");
+		if (isatty(STDIN_FILENO))
+			line = readline("> ");
+		else
+			line = get_next_line_non_interactive();
 		if (g_signal == SIGINT)
 			return (free(line), -1);
 		if (!line)

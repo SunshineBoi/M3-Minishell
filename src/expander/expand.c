@@ -71,33 +71,106 @@ int	expand_redirs(t_redir *redir, char **envp, int last_status)
 	return (0);
 }
 
-static int	expand_cmd_node(t_cmd_node *cmd, char **envp, int last_status)
+static int	is_valid_assignment(const char *arg, char **name, char **value)
+{
+	int	i;
+	int	len;
+
+	i = 0;
+	if (!arg || (!is_name_start(arg[0])))
+		return (0);
+	while (arg[i] && arg[i] != '=')
+	{
+		if (arg[i] != '_' && (arg[i] < 'A' || arg[i] > 'Z')
+			&& (arg[i] < 'a' || arg[i] > 'z') && (arg[i] < '0' || arg[i] > '9'))
+			return (0);
+		i++;
+	}
+	if (arg[i] != '=')
+		return (0);
+	*name = ft_strndup((char *)arg, i);
+	if (!*name)
+		return (0);
+	len = ft_strlen(arg + i + 1);
+	if (len > 0 && arg[i + 1 + len - 1] == ';')
+		*value = ft_strndup((char *)arg + i + 1, len - 1);
+	else
+		*value = ft_strdup(arg + i + 1);
+	return (*value != NULL || (free(*name), 0));
+}
+
+static void	apply_assignment(t_app *app, char *name, char *raw, int last_status)
+{
+	char	*val;
+	char	**w;
+	size_t	c;
+
+	if (expand_word(raw, app->envp, last_status, &w, &c) == 0)
+	{
+		if (c > 0 && w[0])
+			val = ft_strdup(w[0]);
+		else
+			val = ft_strdup("");
+		freelst(w);
+	}
+	else
+		val = ft_strdup("");
+	free(raw);
+	env_set(&app->env_list, name, val);
+	free(name);
+	free(val);
+	update_env_array(app);
+}
+
+static void	process_assignments(t_app *app, t_cmd_node *cmd, int last_status)
+{
+	char	*name;
+	char	*raw_val;
+	int		j;
+
+	while (cmd->argv && cmd->argv[0])
+	{
+		if (!is_valid_assignment(cmd->argv[0], &name, &raw_val))
+			break ;
+		apply_assignment(app, name, raw_val, last_status);
+		free(cmd->argv[0]);
+		j = 0;
+		while (cmd->argv[j])
+		{
+			cmd->argv[j] = cmd->argv[j + 1];
+			j++;
+		}
+	}
+}
+
+static int	expand_cmd_node(t_app *app, t_cmd_node *cmd, int last_status)
 {
 	char	**expanded;
 	int		res;
 
-	if (expand_argv(cmd->argv, envp, last_status, &expanded) != 0)
+	process_assignments(app, cmd, last_status);
+	if (expand_argv(cmd->argv, app->envp, last_status, &expanded) != 0)
 		return (ERR_MALLOC);
 	freelst(cmd->argv);
 	cmd->argv = expanded;
-	res = expand_redirs(cmd->redirs, envp, last_status);
+	res = expand_redirs(cmd->redirs, app->envp, last_status);
 	return (res);
 }
 
-int	expand_ast(t_ast_node *node, char **envp, int last_status)
+int	expand_ast(t_app *app, t_ast_node *node, int last_status)
 {
 	int	res;
 
 	if (!node)
 		return (0);
 	if (node->type == NODE_CMD)
-		return (expand_cmd_node(&node->content.cmd, envp, last_status));
+		return (expand_cmd_node(app, &node->content.cmd, last_status));
 	if (node->type == NODE_BINOP)
 	{
-		res = expand_ast(node->content.binop.left, envp, last_status);
+		res = expand_ast(app, node->content.binop.left, last_status);
 		if (res != 0)
 			return (res);
-		return (expand_ast(node->content.binop.right, envp, last_status));
+		return (expand_ast(app, node->content.binop.right, last_status));
 	}
 	return (0);
 }
