@@ -80,8 +80,7 @@ int	minishell(char **envp)
 		if (g_signal == SIGINT)
 		{
 			setexit(app, EX_SIG_BASE + SIGINT);
-			free(prompt);
-			continue ;
+			g_signal = 0;
 		}
 		if (*prompt)
 			add_history(prompt);
