@@ -225,7 +225,10 @@ static int	read_heredoc_loop(t_app *app, int *pipe_fds, const char *delim, int i
 	while (1)
 	{
 		if (isatty(STDIN_FILENO))
-			line = readline("> ");
+		{
+			write(1, "> ", 2);
+			line = get_next_line_non_interactive();
+		}
 		else
 			line = get_next_line_non_interactive();
 		if (g_signal == SIGINT)

@@ -35,7 +35,39 @@ def test_signals():
     child.expect('minishell\\$ ')
     print("\n[OK] Ctrl+\\ was ignored and shell remained active.")
     
-    # 5. Test Ctrl+D (EOF) on empty line - should exit
+    # 5. Test Ctrl+C (SIGINT) during heredoc - should abort and return to prompt
+    time.sleep(0.2)
+    child.sendline("cat << EOF")
+    child.expect("> ")
+    time.sleep(0.2)
+    child.sendcontrol('c')
+    child.expect('minishell\\$ ')
+    print("\n[OK] Ctrl+C during heredoc aborted the collection and redrew the prompt.")
+
+    # 6. Test Ctrl+C (SIGINT) during sleep - should set exit status to 130
+    time.sleep(0.2)
+    child.sendline("sleep 10")
+    time.sleep(0.2)
+    child.sendcontrol('c')
+    child.expect('minishell\\$ ')
+    child.sendline("echo $?")
+    child.expect("130")
+    child.expect('minishell\\$ ')
+    print("\n[OK] Ctrl+C during sleep set exit status to 130.")
+
+    # 7. Test Ctrl+\ (SIGQUIT) during sleep - should set exit status to 131
+    time.sleep(0.2)
+    child.sendline("sleep 10")
+    time.sleep(0.2)
+    child.sendcontrol('\\')
+    child.expect('Quit')
+    child.expect('minishell\\$ ')
+    child.sendline("echo $?")
+    child.expect("131")
+    child.expect('minishell\\$ ')
+    print("\n[OK] Ctrl+\\ during sleep set exit status to 131.")
+
+    # 8. Test Ctrl+D (EOF) on empty line - should exit
     time.sleep(0.2)
     child.sendcontrol('d')
     child.expect(pexpect.EOF)

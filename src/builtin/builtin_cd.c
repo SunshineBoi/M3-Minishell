@@ -49,6 +49,11 @@ int	builtin_cd(char **argv, t_app *app)
 		errmsg("cd", target, strerror(errno));
 		return (1);
 	}
+	if (argv[1] && ft_strcmp(argv[1], "-") == 0)
+	{
+		ft_putstr_fd(target, 1);
+		write(1, "\n", 1);
+	}
 	update_pwd(app, old_pwd);
 	return (0);
 }
