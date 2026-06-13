@@ -31,6 +31,7 @@ int			do_dup2redirs(t_app *app, t_cmd_node *node);
 void		close_redirsfd(t_cmd_node *node);
 void		close_pipefd(int *pipebuf);
 void		restore_fd(int fdin, int fdout);
+int			collect_heredocs(t_app *app, t_ast_node *ast);
 
 /* === exec_pipeline_utils.c === */
 int			count_cmds(t_ast_node *root);

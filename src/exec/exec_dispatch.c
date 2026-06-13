@@ -51,6 +51,8 @@ int	execute_ast(t_app *app, t_ast_node *ast)
 {
 	if (!ast)
 		return (0);
+	if (collect_heredocs(app, ast) == -1)
+		return (-1);
 	if (ast->type == NODE_CMD)
 	{
 		if (!ast->content.cmd.argv)

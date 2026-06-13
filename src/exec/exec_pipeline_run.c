@@ -39,14 +39,11 @@ void	wait_allpids(pid_t *pids, int pid_id)
 		i++;
 	}
 }
-
 int	do_exec(t_app *app, t_cmd_node *cmdnode)
 {
 	char	*cmdpath;
 	int		status;
 
-	if (!cmdnode->argv)
-		return (exit(EX_OK), -1);  // after expander, we could have NULL argv coming in as pipe node
 	if (is_builtin(cmdnode->argv[0]))
 	{
 		status = exec_builtin(cmdnode->argv, app);
@@ -58,11 +55,14 @@ int	do_exec(t_app *app, t_cmd_node *cmdnode)
 	if (execve(cmdpath, cmdnode->argv, app->envp) == -1)
 	{
 		free(cmdpath);
-		setexecerrno(app);
-		if (!ft_strhaschr(cmdnode->argv[0], '/') &&
-			app->exitcode == EX_CMD_NOTFOUND)
-			return (printerr_cmdnfound(cmdnode->argv[0]), -1);
-		return (ft_perror(cmdnode->argv[0]), -1);
+		if (!ft_strhaschr(cmdnode->argv[0], '/'))
+		{
+			setexecerrno(app);
+			if (app->exitcode == EX_CMD_NOTFOUND)
+				return (printerr_cmdnfound(cmdnode->argv[0]), -1);
+			return (ft_perror(cmdnode->argv[0]), -1);
+		}
+		return (setexecerrno(app), ft_perror(cmdnode->argv[0]), -1);
 	}
 	return (0);
 }

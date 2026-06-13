@@ -1,9 +1,98 @@
 #include "minishell.h"
 
+/**
+ * @brief Create a new environment node.
+ * @param key Variable name (duplicated).
+ * @param value Variable value (duplicated, may be NULL).
+ * @return New node, or NULL on malloc failure.
+ */
+static t_env	*env_new_node(const char *key, const char *value)
+{
+	t_env	*node;
+
+	node = malloc(sizeof(t_env));
+	if (!node)
+		return (NULL);
+	node->key = ft_strdup(key);
+	if (!node->key)
+		return (free(node), NULL);
+	if (value)
+	{
+		node->value = ft_strdup(value);
+		if (!node->value)
+			return (free(node->key), free(node), NULL);
+	}
+	else
+		node->value = NULL;
+	node->next = NULL;
+	return (node);
+}
+
+/**
+ * @brief Build the environment linked list from the envp array.
+ * @param envp NULL-terminated array of "KEY=VALUE" strings.
+ * @return Head of the new list, or NULL on failure.
+ */
+t_env	*env_init(char **envp)
+{
+	t_env	*head;
+	t_env	*tail;
+	t_env	*node;
+	char	*eq;
+	size_t	i;
+
+	head = NULL;
+	tail = NULL;
+	i = 0;
+	while (envp && envp[i])
+	{
+		eq = ft_strchr(envp[i], '=');
+		if (!eq)
+		{
+			i++;
+			continue ;
+		}
+		*eq = '\0';
+		node = env_new_node(envp[i], eq + 1);
+		*eq = '=';
+		if (!node)
+			return (env_free(head), NULL);
+		if (!head)
+			head = node;
+		else
+			tail->next = node;
+		tail = node;
+		i++;
+	}
+	return (head);
+}
+
+/**
+ * @brief Free the entire environment list.
+ * @param list Head of the list.
+ */
+void	env_free(t_env *list)
+{
+	t_env	*next;
+
+	while (list)
+	{
+		next = list->next;
+		free(list->key);
+		free(list->value);
+		free(list);
+		list = next;
+	}
+}
+
+/**
+ * @brief Look up a variable by key.
+ * @param list Head of the environment list.
+ * @param key Variable name to find.
+ * @return The value string (may be NULL for export-only), or NULL if not found.
+ */
 char	*env_get(t_env *list, const char *key)
 {
-	if (!key)
-		return (NULL);
 	while (list)
 	{
 		if (ft_strcmp(list->key, key) == 0)
@@ -13,85 +102,54 @@ char	*env_get(t_env *list, const char *key)
 	return (NULL);
 }
 
-char	**env_to_array(t_env *list)
+/**
+ * @brief Set or create an environment variable.
+ * @param list Pointer to head pointer (may insert at head).
+ * @param key Variable name.
+ * @param value Variable value (NULL to mark export-only).
+ * @return 0 on success, ERR_MALLOC on failure.
+ */
+int	env_set(t_env **list, const char *key, const char *value)
 {
-	char	**arr;
-	size_t	i;
-	char	*tmp;
-
-	arr = ft_calloclst(sizeof(char *) * env_count(list));
-	if (!arr)
-		return (perror(APP), NULL);
-	i = 0;
-	while (list)
-	{
-		if (list->value)
-		{	// ! todo: waht to return as error
-			tmp = ft_strjoin(list->key, "=");
-			if (!tmp)
-				return (freelst(arr), printerr_syscall(ERR_MALLOC), NULL);
-			arr[i] = ft_strjoin(tmp, list->value);
-			free(tmp);
-			if (!arr[i])
-				return (freelst(arr), printerr_syscall(ERR_MALLOC), NULL);
-			i++;
-		}
-		list = list->next;
-	}
-	return (arr);
-}
-
-static int	match_and_set(t_env *env_node, const char *key, const char *value)
-{
+	t_env	*cur;
 	char	*new_val;
 
-	while (env_node)
+	cur = *list;
+	while (cur)
 	{
-		if (ft_strcmp(env_node->key, key) == 0)
+		if (ft_strcmp(cur->key, key) == 0)
 		{
 			if (value)
 			{
 				new_val = ft_strdup(value);
 				if (!new_val)
-					return (printerr_syscall(ERR_MALLOC), ERR_MALLOC);
-				free(env_node->value);
-				env_node->value = new_val;
+					return (ERR_MALLOC);
+				free(cur->value);
+				cur->value = new_val;
 			}
-			return (1);
+			return (0);
 		}
-		env_node = env_node->next;
+		cur = cur->next;
 	}
-	return (0);
-}
-
-int	env_set(t_env **head, const char *key, const char *value)
-{
-	t_env	*cur;
-	int		found;
-
-	if (!key || !*key)
-		return (ERR_BADINPUT);
-	cur = *head;
-	found = match_and_set(cur, key, value);
-	if (found == ERR_MALLOC)
-		return (ERR_MALLOC);
-	else if (found == 1)
-		return (0);
 	cur = env_new_node(key, value);
 	if (!cur)
 		return (ERR_MALLOC);
-	cur->next = *head;
-	*head = cur;
+	cur->next = *list;
+	*list = cur;
 	return (0);
 }
 
+/**
+ * @brief Remove a variable by key.
+ * @param list Pointer to head pointer.
+ * @param key Variable name to remove.
+ * @return 0 always (silent success even if not found).
+ */
 int	env_unset(t_env **list, const char *key)
 {
 	t_env	*cur;
 	t_env	*prev;
 
-	if (!key || !*key)
-		return (ERR_BADINPUT);
 	prev = NULL;
 	cur = *list;
 	while (cur)
@@ -111,5 +169,57 @@ int	env_unset(t_env **list, const char *key)
 		cur = cur->next;
 	}
 	return (0);
+}
+
+/**
+ * @brief Count nodes in the environment list.
+ */
+static size_t	env_count(t_env *list)
+{
+	size_t	n;
+
+	n = 0;
+	while (list)
+	{
+		if (list->value)
+			n++;
+		list = list->next;
+	}
+	return (n);
+}
+
+/**
+ * @brief Convert the environment list to a NULL-terminated char** array.
+ *
+ * Only variables with non-NULL values are included (matching `env` behavior).
+ * Caller must free with freelst().
+ */
+char	**env_to_array(t_env *list)
+{
+	char	**arr;
+	size_t	i;
+	char	*tmp;
+
+	arr = malloc(sizeof(char *) * (env_count(list) + 1));
+	if (!arr)
+		return (NULL);
+	i = 0;
+	while (list)
+	{
+		if (list->value)
+		{
+			tmp = ft_strjoin(list->key, "=");
+			if (!tmp)
+				return (freelst(arr), NULL);
+			arr[i] = ft_strjoin(tmp, list->value);
+			free(tmp);
+			if (!arr[i])
+				return (freelst(arr), NULL);
+			i++;
+		}
+		list = list->next;
+	}
+	arr[i] = NULL;
+	return (arr);
 }
 

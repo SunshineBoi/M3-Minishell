@@ -48,5 +48,5 @@ int	builtin_echo(char **argv)
 	}
 	if (newline)
 		write(1, "\n", 1);
-	return (EX_OK);
+	return (0);
 }
