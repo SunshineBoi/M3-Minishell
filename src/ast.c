@@ -7,6 +7,8 @@ static void	free_redirs(t_redir *redir)
 	while (redir)
 	{
 		next = redir->next;
+		if (redir->fd != -1)
+			close(redir->fd);
 		free(redir->target);
 		free(redir);
 		redir = next;
