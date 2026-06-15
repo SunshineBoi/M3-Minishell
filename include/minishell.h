@@ -196,6 +196,7 @@ int		isspecialsym(int ch);
  * @return 1 if found, 0 otherwise.
  */
 int		ft_strhaschr(char *str, char ch);
+int		is_numeric(const char *s, long long *val);
 
 
 /* === signals.c === */

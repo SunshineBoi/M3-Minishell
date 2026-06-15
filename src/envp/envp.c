@@ -6,21 +6,23 @@
  * @param value Variable value (duplicated, may be NULL).
  * @return New node, or NULL on malloc failure.
  */
-static t_env	*env_new_node(const char *key, const char *value)
+t_env	*env_new_node(const char *key, const char *value)
 {
 	t_env	*node;
 
+	if (!key || !*key)
+		return (NULL);
 	node = malloc(sizeof(t_env));
 	if (!node)
-		return (NULL);
+		return (perror(APP), NULL);
 	node->key = ft_strdup(key);
 	if (!node->key)
-		return (free(node), NULL);
+		return (free(node), printerr_syscall(ERR_MALLOC), NULL);
 	if (value)
 	{
 		node->value = ft_strdup(value);
 		if (!node->value)
-			return (free(node->key), free(node), NULL);
+			return (free(node->key), free(node), printerr_syscall(ERR_MALLOC), NULL);
 	}
 	else
 		node->value = NULL;
@@ -93,6 +95,8 @@ void	env_free(t_env *list)
  */
 char	*env_get(t_env *list, const char *key)
 {
+	if (!key)
+		return (NULL);
 	while (list)
 	{
 		if (ft_strcmp(list->key, key) == 0)
@@ -114,6 +118,8 @@ int	env_set(t_env **list, const char *key, const char *value)
 	t_env	*cur;
 	char	*new_val;
 
+	if (!key || !*key)
+		return (0);
 	cur = *list;
 	while (cur)
 	{
@@ -150,6 +156,8 @@ int	env_unset(t_env **list, const char *key)
 	t_env	*cur;
 	t_env	*prev;
 
+	if (!key || !*key)
+		return (0);
 	prev = NULL;
 	cur = *list;
 	while (cur)

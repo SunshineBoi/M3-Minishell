@@ -78,6 +78,7 @@ int	do_childproc(t_app *app, t_cmd_node *cmdnode, int fdin, int fdout)
 int	start_pipeline(t_app *app, t_pipeops *pipeops, t_cmd_node **cmds)
 {
 	int	i;
+	int	exitcode;
 
 	i = 0;
 	while (i < pipeops->n_cmd)
@@ -93,9 +94,8 @@ int	start_pipeline(t_app *app, t_pipeops *pipeops, t_cmd_node **cmds)
 			if (pipeops->pipebuf[0] != -1)
 				close(pipeops->pipebuf[0]);
 			do_childproc(app, cmds[i], pipeops->prevfdin, pipeops->fdout);
-			free(cmds);
-			free(pipeops);
-			exit(app->exitcode);
+			exitcode = app->exitcode;
+			return (free(cmds), free(pipeops), exit(exitcode), -1);
 		}
 		update_pipeops(pipeops, i);
 		i++;

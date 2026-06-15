@@ -17,18 +17,23 @@ t_app	*init_app(char **envp)
 
 void	process_prompt(t_app *app, char *str)
 {
-	app->tokensll = build_tokensll(str);
+	app->tokensll = build_tokensll(app, str);
 	if (validate_tokensll(app) == -1)
-		return (freetokensll(app->tokensll));
+	{
+		freetokensll(app->tokensll);
+		app->tokensll = NULL;
+		return ;
+	}
 	
 	app->ast = parse_tokens(app->tokensll);
 	freetokensll(app->tokensll);
 	app->tokensll = NULL;
 	if (!app->ast)
 		return ;
-	if (expand_ast(app, app->ast, app->exitcode) != 0)
+	if (expand_ast(app, app->ast) != 0)
 		return (ast_free(app->ast));
 	execute_ast(app, app->ast);
+	update_env_array(app);
 	ast_free(app->ast);
 	app->ast = NULL;
 }

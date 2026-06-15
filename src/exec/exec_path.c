@@ -43,7 +43,7 @@ static char	*_matchcmdpath(t_app *app, char **pathlst, char *cmd)
 			goodpath = buildgoodpath(app, ".", cmd);
 		else
 			goodpath = buildgoodpath(app, pathlst[i], cmd);
-		if (goodpath || app->exitcode == EACCES)
+		if (goodpath || app->exitcode == EX_CMD_NEXEC)
 			break ;
 		i++;
 	}

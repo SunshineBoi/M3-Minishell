@@ -48,7 +48,7 @@ static void	update_num_sign(const char *s, int *sign, int *pos)
 	}
 }
 
-static int	is_whitespaceonly(char *s)
+static int	is_whitespaceonly(const char *s)
 {
 	while (*s)
 	{
