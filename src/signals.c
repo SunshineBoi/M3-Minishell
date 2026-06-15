@@ -7,9 +7,11 @@ void	handlesig_prompt(int sig)
 {
 	g_signal = sig;
 	write(1, "\n", 1);
-	rl_replace_line("", 0);
-	rl_on_new_line();
-	rl_redisplay();
+	// ! below is not async safe - handler shouldnt work with buffer
+	// ! shifted into main loop
+	// rl_replace_line("", 0);
+	// rl_on_new_line();
+	// rl_redisplay();
 }
 
 void	signals_at_prompt(void)
@@ -49,6 +51,14 @@ void	signals_default(void)
 	sigaction(SIGINT, &sa, NULL);
 	sigaction(SIGQUIT, &sa, NULL);
 	sigaction(SIGPIPE, &sa, NULL);
+}
+
+void	handle_sigint_in_main(t_app *app, char *prompt)
+{
+	setexit(app, EX_SIG_BASE + SIGINT);
+	free(prompt);
+	rl_replace_line("", 0);
+	rl_on_new_line();
 }
 /*
 signal(received, action)
