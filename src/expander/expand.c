@@ -150,9 +150,9 @@ static int	expand_cmd_node(t_app *app, t_cmd_node *cmd)
 	char		**envp;
 	int			last_status;
 
-	envp = app->envp;
 	last_status = app->exitcode;
 	process_assignments(app, cmd, last_status);
+	envp = app->envp;
 	if (expand_argv(cmd->argv, envp, last_status, &expanded) != 0)
 		return (ERR_MALLOC);
 	freelst(cmd->argv);
