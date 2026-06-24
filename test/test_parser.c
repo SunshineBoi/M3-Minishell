@@ -2,6 +2,14 @@
 #include <string.h>
 #include "minishell.h"
 
+static t_tokensll *test_build_tokensll(char *str)
+{
+	t_app	app;
+
+	app = (t_app){0};
+	return (build_tokensll(&app, str));
+}
+
 static void assert_argv(char **argv, const char **expected, size_t count)
 {
 	size_t i;
@@ -31,7 +39,7 @@ Test(parser, parse_simple_command)
 	t_ast_node *root;
 	const char *argv_expected[] = {"echo", "hi", NULL};
 
-	tokens = build_tokensll("echo hi");
+	tokens = test_build_tokensll("echo hi");
 	cr_assert_not_null(tokens);
 	root = parse_tokens(tokens);
 	cr_assert_not_null(root);
@@ -50,7 +58,7 @@ Test(parser, parse_pipeline)
 	const char *left_argv[] = {"echo", "hi", NULL};
 	const char *right_argv[] = {"wc", "-l", NULL};
 
-	tokens = build_tokensll("echo hi | wc -l");
+	tokens = test_build_tokensll("echo hi | wc -l");
 	cr_assert_not_null(tokens);
 	root = parse_tokens(tokens);
 	cr_assert_not_null(root);
@@ -72,7 +80,7 @@ Test(parser, parse_redirections_interleaved)
 	t_redir *r;
 	const char *argv_expected[] = {"cat", "out", NULL};
 
-	tokens = build_tokensll("cat < in out > final");
+	tokens = test_build_tokensll("cat < in out > final");
 	cr_assert_not_null(tokens);
 	root = parse_tokens(tokens);
 	cr_assert_not_null(root);
@@ -95,7 +103,7 @@ Test(parser, parse_multiple_redirections)
 	t_redir *r;
 	const char *argv_expected[] = {"cmd", NULL};
 
-	tokens = build_tokensll("cmd < in > out >> append");
+	tokens = test_build_tokensll("cmd < in > out >> append");
 	cr_assert_not_null(tokens);
 	root = parse_tokens(tokens);
 	cr_assert_not_null(root);
@@ -117,25 +125,25 @@ Test(parser, parse_invalid_syntax)
 	t_tokensll *tokens;
 	t_ast_node *root;
 
-	tokens = build_tokensll("ls |");
+	tokens = test_build_tokensll("ls |");
 	cr_assert_not_null(tokens);
 	root = parse_tokens(tokens);
 	cr_assert_null(root);
 	freetokensll(tokens);
 
-	tokens = build_tokensll("| ls");
+	tokens = test_build_tokensll("| ls");
 	cr_assert_not_null(tokens);
 	root = parse_tokens(tokens);
 	cr_assert_null(root);
 	freetokensll(tokens);
 
-	tokens = build_tokensll("echo >");
+	tokens = test_build_tokensll("echo >");
 	cr_assert_not_null(tokens);
 	root = parse_tokens(tokens);
 	cr_assert_null(root);
 	freetokensll(tokens);
 
-	tokens = build_tokensll("cat < > out");
+	tokens = test_build_tokensll("cat < > out");
 	cr_assert_not_null(tokens);
 	root = parse_tokens(tokens);
 	cr_assert_null(root);
@@ -148,7 +156,7 @@ Test(parser, parse_redirection_only_command)
 	t_ast_node *root;
 	t_redir *r;
 
-	tokens = build_tokensll("> out");
+	tokens = test_build_tokensll("> out");
 	cr_assert_not_null(tokens);
 	root = parse_tokens(tokens);
 	cr_assert_not_null(root);
@@ -170,7 +178,7 @@ Test(parser, parse_empty_quoted_command)
 	t_tokensll *tokens;
 	t_ast_node *root;
 
-	tokens = build_tokensll("\"\"");
+	tokens = test_build_tokensll("\"\"");
 	cr_assert_not_null(tokens);
 	root = parse_tokens(tokens);
 	cr_assert_not_null(root);

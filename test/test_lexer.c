@@ -2,6 +2,14 @@
 #include <string.h>
 #include "minishell.h"
 
+static t_tokensll *test_build_tokensll(char *str)
+{
+	t_app	app;
+
+	app = (t_app){0};
+	return (build_tokensll(&app, str));
+}
+
 static void assert_token(t_tokensll *tok, t_token_type type, const char *val)
 {
 	cr_assert_not_null(tok);
@@ -14,7 +22,7 @@ Test(lexer, tokens_simple_words)
 {
 	t_tokensll *tokens;
 
-	tokens = build_tokensll("echo hi");
+	tokens = test_build_tokensll("echo hi");
 	cr_assert_not_null(tokens);
 	cr_assert_eq(ft_sllsize(tokens), 2);
 
@@ -29,7 +37,7 @@ Test(lexer, tokens_with_pipe_and_redirs)
 	t_tokensll *tokens;
 	t_tokensll *tok;
 
-	tokens = build_tokensll("cat < in | grep x >> out");
+	tokens = test_build_tokensll("cat < in | grep x >> out");
 	cr_assert_not_null(tokens);
 	cr_assert_eq(ft_sllsize(tokens), 8);
 
@@ -51,7 +59,7 @@ Test(lexer, tokens_no_spaces)
 	t_tokensll *tokens;
 	t_tokensll *tok;
 
-	tokens = build_tokensll("a|b>>c<<d>e<f");
+	tokens = test_build_tokensll("a|b>>c<<d>e<f");
 	cr_assert_not_null(tokens);
 	cr_assert_eq(ft_sllsize(tokens), 11);
 
@@ -75,7 +83,7 @@ Test(lexer, unterminated_quote_returns_null)
 {
 	t_tokensll *tokens;
 
-	tokens = build_tokensll("'abc");
+	tokens = test_build_tokensll("'abc");
 	cr_assert_null(tokens);
 }
 
@@ -83,7 +91,7 @@ Test(lexer, single_quotes_preserved_for_expansion)
 {
 	t_tokensll *tokens;
 
-	tokens = build_tokensll("echo 'a b'");
+	tokens = test_build_tokensll("echo 'a b'");
 	cr_assert_not_null(tokens);
 	cr_assert_eq(ft_sllsize(tokens), 2);
 	assert_token(tokens, TOK_STR, "echo");
@@ -96,7 +104,7 @@ Test(lexer, double_quotes_preserved_for_expansion)
 {
 	t_tokensll *tokens;
 
-	tokens = build_tokensll("echo \"a\\\"b\"");
+	tokens = test_build_tokensll("echo \"a\\\"b\"");
 	cr_assert_not_null(tokens);
 	cr_assert_eq(ft_sllsize(tokens), 2);
 	assert_token(tokens, TOK_STR, "echo");
@@ -109,7 +117,7 @@ Test(lexer, backslash_escapes_space_outside_quotes)
 {
 	t_tokensll *tokens;
 
-	tokens = build_tokensll("echo a\\ b");
+	tokens = test_build_tokensll("echo a\\ b");
 	cr_assert_not_null(tokens);
 	cr_assert_eq(ft_sllsize(tokens), 2);
 	assert_token(tokens, TOK_STR, "echo");
@@ -122,7 +130,7 @@ Test(lexer, variables_are_not_expanded)
 {
 	t_tokensll *tokens;
 
-	tokens = build_tokensll("echo $HOME");
+	tokens = test_build_tokensll("echo $HOME");
 	cr_assert_not_null(tokens);
 	cr_assert_eq(ft_sllsize(tokens), 2);
 	assert_token(tokens, TOK_STR, "echo");
@@ -135,7 +143,7 @@ Test(lexer, consecutive_whitespace_is_ignored)
 {
 	t_tokensll *tokens;
 
-	tokens = build_tokensll("ls    -l\t\t-a");
+	tokens = test_build_tokensll("ls    -l\t\t-a");
 	cr_assert_not_null(tokens);
 	cr_assert_eq(ft_sllsize(tokens), 3);
 	assert_token(tokens, TOK_STR, "ls");
@@ -148,7 +156,7 @@ Test(lexer, escaped_quotes_outside_quotes)
 {
 	t_tokensll *tokens;
 
-	tokens = build_tokensll("echo \\\"a\\\"");
+	tokens = test_build_tokensll("echo \\\"a\\\"");
 	cr_assert_not_null(tokens);
 	cr_assert_eq(ft_sllsize(tokens), 2);
 	assert_token(tokens, TOK_STR, "echo");
@@ -160,14 +168,14 @@ Test(lexer, invalid_operators_tokenize_separately)
 {
 	t_tokensll *tokens;
 
-	tokens = build_tokensll(">>>");
+	tokens = test_build_tokensll(">>>");
 	cr_assert_not_null(tokens);
 	cr_assert_eq(ft_sllsize(tokens), 2);
 	assert_token(tokens, TOK_DIRAPPND, ">>");
 	assert_token(tokens->next, TOK_DIROUT, ">");
 	freetokensll(tokens);
 
-	tokens = build_tokensll("|||");
+	tokens = test_build_tokensll("|||");
 	cr_assert_not_null(tokens);
 	cr_assert_eq(ft_sllsize(tokens), 3);
 	assert_token(tokens, TOK_PIPE, "|");
@@ -180,7 +188,7 @@ Test(lexer, quoted_strings_stay_single_tokens)
 {
 	t_tokensll	*tokens;
 
-	tokens = build_tokensll("echo 'hello world' \"good bye\"");
+	tokens = test_build_tokensll("echo 'hello world' \"good bye\"");
 	cr_assert_not_null(tokens);
 	cr_assert_eq(ft_sllsize(tokens), 3);
 	assert_token(tokens, TOK_STR, "echo");
@@ -193,7 +201,7 @@ Test(lexer, empty_quoted_strings_are_tokens)
 {
 	t_tokensll	*tokens;
 
-	tokens = build_tokensll("echo \"\" ''");
+	tokens = test_build_tokensll("echo \"\" ''");
 	cr_assert_not_null(tokens);
 	cr_assert_eq(ft_sllsize(tokens), 3);
 	assert_token(tokens, TOK_STR, "echo");
@@ -206,7 +214,7 @@ Test(lexer, variables_are_not_expanded_by_lexer)
 {
 	t_tokensll	*tokens;
 
-	tokens = build_tokensll("echo $HOME \"$USER\" '$PATH' $?");
+	tokens = test_build_tokensll("echo $HOME \"$USER\" '$PATH' $?");
 	cr_assert_not_null(tokens);
 	cr_assert_eq(ft_sllsize(tokens), 5);
 	assert_token(tokens, TOK_STR, "echo");
@@ -219,28 +227,28 @@ Test(lexer, variables_are_not_expanded_by_lexer)
 
 Test(lexer, unterminated_quotes_return_null)
 {
-	cr_assert_null(build_tokensll("'abc"));
-	cr_assert_null(build_tokensll("\"abc"));
+	cr_assert_null(test_build_tokensll("'abc"));
+	cr_assert_null(test_build_tokensll("\"abc"));
 }
 
 Test(lexer, empty_or_space_only_returns_null)
 {
-	cr_assert_null(build_tokensll(""));
-	cr_assert_null(build_tokensll("    \t\n  "));
+	cr_assert_null(test_build_tokensll(""));
+	cr_assert_null(test_build_tokensll("    \t\n  "));
 }
 
 Test(lexer, invalid_pipe_sequences_are_visible_to_syntax_validator)
 {
 	t_tokensll	*tokens;
 
-	tokens = build_tokensll("echo hello || cat");
+	tokens = test_build_tokensll("echo hello || cat");
 	cr_assert_not_null(tokens);
 	cr_assert_eq(ft_sllsize(tokens), 5);
 	assert_token(tokens->next->next, TOK_PIPE, "|");
 	assert_token(tokens->next->next->next, TOK_PIPE, "|");
 	freetokensll(tokens);
 
-	tokens = build_tokensll("echo hello | | cat");
+	tokens = test_build_tokensll("echo hello | | cat");
 	cr_assert_not_null(tokens);
 	cr_assert_eq(ft_sllsize(tokens), 5);
 	assert_token(tokens->next->next, TOK_PIPE, "|");
@@ -252,17 +260,16 @@ Test(lexer, redirection_operator_sequences_are_visible_to_syntax_validator)
 {
 	t_tokensll	*tokens;
 
-	tokens = build_tokensll("echo hello > > out");
+	tokens = test_build_tokensll("echo hello > > out");
 	cr_assert_not_null(tokens);
 	cr_assert_eq(ft_sllsize(tokens), 5);
 	assert_token(tokens->next->next, TOK_DIROUT, ">");
 	assert_token(tokens->next->next->next, TOK_DIROUT, ">");
 	freetokensll(tokens);
 
-	tokens = build_tokensll("cat <<");
+	tokens = test_build_tokensll("cat <<");
 	cr_assert_not_null(tokens);
 	cr_assert_eq(ft_sllsize(tokens), 2);
 	assert_token(tokens->next, TOK_HEREDOC, "<<");
 	freetokensll(tokens);
 }
-
