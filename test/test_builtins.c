@@ -145,6 +145,20 @@ Test(builtins, export_invalid_identifier_returns_error)
 	env_free(app.env_list);
 }
 
+Test(builtins, export_name_only_preserves_existing_value)
+{
+	t_app	app;
+	char	*argv[] = {"export", "A", NULL};
+	int	ret;
+
+	app = make_app();
+	env_set(&app.env_list, "A", "1");
+	ret = builtin_export(argv, &app);
+	cr_assert_eq(ret, 0);
+	cr_assert_str_eq(env_get(app.env_list, "A"), "1");
+	env_free(app.env_list);
+}
+
 Test(builtins, unset_invalid_identifier_returns_error)
 {
 	t_app	app;
@@ -156,6 +170,22 @@ Test(builtins, unset_invalid_identifier_returns_error)
 	ret = builtin_unset(argv, &app);
 	cr_assert_eq(ret, 1);
 	cr_assert_null(env_get(app.env_list, "A"));
+	env_free(app.env_list);
+}
+
+Test(builtins, unset_continues_after_invalid_identifier)
+{
+	t_app	app;
+	char	*argv[] = {"unset", "A", "BAD-NAME", "B", NULL};
+	int	ret;
+
+	app = make_app();
+	env_set(&app.env_list, "A", "1");
+	env_set(&app.env_list, "B", "2");
+	ret = builtin_unset(argv, &app);
+	cr_assert_eq(ret, 1);
+	cr_assert_null(env_get(app.env_list, "A"));
+	cr_assert_null(env_get(app.env_list, "B"));
 	env_free(app.env_list);
 }
 

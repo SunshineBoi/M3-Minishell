@@ -189,3 +189,63 @@ Test(parser, parse_empty_quoted_command)
 	ast_free(root);
 	freetokensll(tokens);
 }
+
+Test(parser, parse_heredoc_redirection)
+{
+	t_tokensll *tokens;
+	t_ast_node *root;
+	t_redir *r;
+	const char *argv_expected[] = {"cat", NULL};
+
+	tokens = test_build_tokensll("cat << EOF");
+	cr_assert_not_null(tokens);
+	root = parse_tokens(tokens);
+	cr_assert_not_null(root);
+	cr_assert_eq(root->type, NODE_CMD);
+	assert_argv(root->content.cmd.argv, argv_expected, 1);
+	r = root->content.cmd.redirs;
+	assert_redir(r, REDIR_HEREDOC, "EOF");
+	cr_assert_null(r->next);
+
+	ast_free(root);
+	freetokensll(tokens);
+}
+
+Test(parser, parse_redirection_only_pipeline_command)
+{
+	t_tokensll *tokens;
+	t_ast_node *root;
+	t_ast_node *right;
+	t_redir *r;
+	const char *left_argv[] = {"echo", "hi", NULL};
+
+	tokens = test_build_tokensll("echo hi | > out");
+	cr_assert_not_null(tokens);
+	root = parse_tokens(tokens);
+	cr_assert_not_null(root);
+	cr_assert_eq(root->type, NODE_BINOP);
+	cr_assert_eq(root->content.binop.op, BIN_PIPE);
+	assert_argv(root->content.binop.left->content.cmd.argv, left_argv, 2);
+	right = root->content.binop.right;
+	cr_assert_eq(right->type, NODE_CMD);
+	cr_assert_not_null(right->content.cmd.argv);
+	cr_assert_null(right->content.cmd.argv[0]);
+	r = right->content.cmd.redirs;
+	assert_redir(r, REDIR_OUT, "out");
+	cr_assert_null(r->next);
+
+	ast_free(root);
+	freetokensll(tokens);
+}
+
+Test(parser, parse_rejects_double_pipe)
+{
+	t_tokensll *tokens;
+	t_ast_node *root;
+
+	tokens = test_build_tokensll("echo hi || wc");
+	cr_assert_not_null(tokens);
+	root = parse_tokens(tokens);
+	cr_assert_null(root);
+	freetokensll(tokens);
+}

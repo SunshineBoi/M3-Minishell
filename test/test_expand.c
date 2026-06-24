@@ -175,3 +175,52 @@ Test(expand, double_quote_backslash_rules)
 	cr_assert_str_eq(words[0], "$VAR");
 	free_words(words);
 }
+
+Test(expand, quoted_and_unquoted_segments_join_one_word)
+{
+	char **words;
+	size_t count;
+	char *envp[] = {"USER=marvin", "EMPTY=", NULL};
+
+	cr_assert_eq(expand_word("pre\"$USER\"'!'post", envp, 0,
+			&words, &count), 0);
+	cr_assert_eq(count, 1);
+	cr_assert_str_eq(words[0], "premarvin!post");
+	free_words(words);
+
+	cr_assert_eq(expand_word("a\"\"b''c$EMPTY", envp, 0,
+			&words, &count), 0);
+	cr_assert_eq(count, 1);
+	cr_assert_str_eq(words[0], "abc");
+	free_words(words);
+}
+
+Test(expand, variable_name_boundaries)
+{
+	char **words;
+	size_t count;
+	char *envp[] = {"A=one", "A1=two", "_X=under", NULL};
+
+	cr_assert_eq(expand_word("$A1:$A-$_X", envp, 0, &words, &count), 0);
+	cr_assert_eq(count, 1);
+	cr_assert_str_eq(words[0], "two:one-under");
+	free_words(words);
+
+	cr_assert_eq(expand_word("${A}", envp, 0, &words, &count), 0);
+	cr_assert_eq(count, 1);
+	cr_assert_str_eq(words[0], "${A}");
+	free_words(words);
+}
+
+Test(expand, unquoted_empty_middle_variable_does_not_split_word)
+{
+	char **words;
+	size_t count;
+	char *envp[] = {"EMPTY=", "WORD=mid", NULL};
+
+	cr_assert_eq(expand_word("pre$EMPTY$WORD-post", envp, 0,
+			&words, &count), 0);
+	cr_assert_eq(count, 1);
+	cr_assert_str_eq(words[0], "premid-post");
+	free_words(words);
+}

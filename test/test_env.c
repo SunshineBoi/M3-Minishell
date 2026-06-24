@@ -48,3 +48,32 @@ Test(env, to_array_skips_null_values)
 	freelst(arr);
 	env_free(list);
 }
+
+Test(env, set_null_on_existing_value_preserves_value)
+{
+	t_env *list;
+
+	list = NULL;
+	cr_assert_eq(env_set(&list, "A", "1"), 0);
+	cr_assert_eq(env_set(&list, "A", NULL), 0);
+	cr_assert_str_eq(env_get(list, "A"), "1");
+	env_free(list);
+}
+
+Test(env, unset_head_middle_and_missing)
+{
+	t_env *list;
+
+	list = NULL;
+	env_set(&list, "A", "1");
+	env_set(&list, "B", "2");
+	env_set(&list, "C", "3");
+	cr_assert_eq(env_unset(&list, "C"), 0);
+	cr_assert_null(env_get(list, "C"));
+	cr_assert_str_eq(env_get(list, "B"), "2");
+	cr_assert_eq(env_unset(&list, "A"), 0);
+	cr_assert_null(env_get(list, "A"));
+	cr_assert_str_eq(env_get(list, "B"), "2");
+	cr_assert_eq(env_unset(&list, "NOPE"), 0);
+	env_free(list);
+}
