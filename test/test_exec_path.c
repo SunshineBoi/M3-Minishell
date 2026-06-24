@@ -121,3 +121,49 @@ Test(exec_path, empty_path_entry_uses_cwd)
 	unlink(full);
 	rmdir(tmpdir);
 }
+
+Test(exec_path, trailing_empty_path_entry_uses_cwd)
+{
+	char	cwd[PATH_MAX];
+	char	tmpdir[] = "/tmp/minishell_pathXXXXXX";
+	char	full[PATH_MAX];
+	t_env	*list;
+	char	*resolved;
+
+	cr_assert_not_null(getcwd(cwd, sizeof(cwd)));
+	cr_assert_not_null(mkdtemp(tmpdir));
+	cr_assert_eq(chdir(tmpdir), 0);
+	cr_assert_eq(make_executable(".", "herecmd", full, sizeof(full)), 0);
+	list = make_env_with_path("/bin:");
+	resolved = resolve_command_path("herecmd", list);
+	cr_assert_not_null(resolved);
+	cr_assert_str_eq(resolved, "./herecmd");
+	free(resolved);
+	env_free(list);
+	chdir(cwd);
+	unlink(full);
+	rmdir(tmpdir);
+}
+
+Test(exec_path, entirely_empty_path_uses_cwd)
+{
+	char	cwd[PATH_MAX];
+	char	tmpdir[] = "/tmp/minishell_pathXXXXXX";
+	char	full[PATH_MAX];
+	t_env	*list;
+	char	*resolved;
+
+	cr_assert_not_null(getcwd(cwd, sizeof(cwd)));
+	cr_assert_not_null(mkdtemp(tmpdir));
+	cr_assert_eq(chdir(tmpdir), 0);
+	cr_assert_eq(make_executable(".", "herecmd", full, sizeof(full)), 0);
+	list = make_env_with_path("");
+	resolved = resolve_command_path("herecmd", list);
+	cr_assert_not_null(resolved);
+	cr_assert_str_eq(resolved, "./herecmd");
+	free(resolved);
+	env_free(list);
+	chdir(cwd);
+	unlink(full);
+	rmdir(tmpdir);
+}

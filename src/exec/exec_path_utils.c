@@ -27,16 +27,13 @@ static int	_splithelper(char **target, char *str, char delim)
 
 	lenword = 0;
 	n_delim = 0;
-	if (str[lenword])
-	{
-		while (str[lenword] && str[lenword] != delim)
-			lenword++;
-		if (str[lenword] == delim)
-			n_delim += 1;
-		*target = ft_strndup(str, lenword);
-		if (!*target)
-			return (-1);
-	}
+	while (str[lenword] && str[lenword] != delim)
+		lenword++;
+	if (str[lenword] == delim)
+		n_delim += 1;
+	*target = ft_strndup(str, lenword);
+	if (!*target)
+		return (-1);
 	return (lenword + n_delim);
 }
 
@@ -45,6 +42,7 @@ char	**ft_splitbydelim(t_app *app, char *str, char delim)
 	char	**lst;
 	int		size;
 	int		i;
+	int		next_size;
 
 	size = countbydelim(str, delim);
 	if (size == 0)
@@ -53,13 +51,13 @@ char	**ft_splitbydelim(t_app *app, char *str, char delim)
 	if (!lst)
 		return (setexit(app, EX_ERR), perror(APP), NULL);
 	i = 0;
-	while (*str)
+	while (i < size)
 	{
-		size = _splithelper(&(lst[i]), str, delim);
-		if (size == -1)
+		next_size = _splithelper(&(lst[i]), str, delim);
+		if (next_size == -1)
 			return (setexit(app, EX_ERR), perror(APP), freelst(lst), NULL);
 		i++;
-		str += size;
+		str += next_size;
 	}
 	return (lst);
 }

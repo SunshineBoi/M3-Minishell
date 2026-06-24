@@ -55,10 +55,12 @@ static int	has_unsupported_ops(const char *val)
 int	validate_tokensll(t_app *app)
 {
 	t_tokensll	*tokensll;
+	int			syntax_error;
 
 	tokensll = app->tokensll;
 	if (!tokensll)
 		return (0);
+	syntax_error = 0;
 	// first token cannot be pipe
 	if (ispipe(tokensll->type))
 	{
@@ -69,16 +71,19 @@ int	validate_tokensll(t_app *app)
 	while (tokensll)
 	{
 		if (ispipe(tokensll->type) && !is_valid_pipe(tokensll))
-			app->exitcode = EX_SYNTAX;
+			syntax_error = 1;
 		else if (isredir(tokensll->type) && !is_valid_redir(tokensll))
-			app->exitcode = EX_SYNTAX;
+			syntax_error = 1;
 		else if (tokensll->type == TOK_STR && has_unsupported_ops(tokensll->val))
 		{
-			app->exitcode = EX_SYNTAX;
+			syntax_error = 1;
 			printerr_syntax(tokensll->val);
 		}
-		if (app->exitcode == EX_SYNTAX)
+		if (syntax_error)
+		{
+			app->exitcode = EX_SYNTAX;
 			return (-1);
+		}
 		tokensll = tokensll->next;
 	}
 	return (0);
