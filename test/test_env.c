@@ -29,6 +29,22 @@ Test(env, init_get_set_unset)
 	env_free(list);
 }
 
+Test(env, init_accepts_literal_backed_envp_without_mutation)
+{
+	char	*envp[] = {"A=1", "B=two=three", "EMPTY=", NULL};
+	t_env	*list;
+
+	list = env_init(envp);
+	cr_assert_not_null(list);
+	cr_assert_str_eq(env_get(list, "A"), "1");
+	cr_assert_str_eq(env_get(list, "B"), "two=three");
+	cr_assert_str_eq(env_get(list, "EMPTY"), "");
+	cr_assert_str_eq(envp[0], "A=1");
+	cr_assert_str_eq(envp[1], "B=two=three");
+	cr_assert_str_eq(envp[2], "EMPTY=");
+	env_free(list);
+}
+
 Test(env, to_array_skips_null_values)
 {
 	t_env *list;
