@@ -208,7 +208,7 @@ char	**env_to_array(t_env *list)
 	size_t	i;
 	char	*tmp;
 
-	arr = ft_calloclst(sizeof(char *) * (env_count(list) + 1));
+	arr = ft_calloclst(env_count(list));
 	if (!arr)
 		return (NULL);
 	i = 0;
@@ -242,4 +242,3 @@ void	update_env_array(t_app *app)
 		freelst(app->envp);
 	app->envp = new_envp;
 }
-
