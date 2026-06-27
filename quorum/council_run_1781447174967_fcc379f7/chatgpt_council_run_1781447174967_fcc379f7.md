@@ -17,17 +17,7 @@ Run ID: council_run_1781447174967_fcc379f7
 
 
 
-### 2. `env_set(..., NULL)` cannot clear an existing value despite its documented contract
 
-
-* **Classification:** Confirmed defect
-* **Severity:** Medium
-* **Confidence:** High
-* **Evidence:** `Documents/42-Projects/Minishell/minishell-github/src/envp/envp.c:105-110`, `:120-130`
-* **Reasoning:** The function documents `value == NULL` as meaning “mark export-only.” For an existing node, however, the function only changes the node when `value` is non-NULL. Passing NULL returns success while leaving the previous value intact. New and existing keys consequently have different behavior for the same documented operation.
-* **Missing context:** Shell-level call sites may intentionally rely on Bash-like `export NAME` preserving an existing value. If so, the documentation/API contract is wrong rather than the implementation, and a distinct operation is needed to explicitly clear a value.
-* **Implementation options:** Either free `cur->value` and assign NULL when the API truly means “set export-only,” or split the API into operations such as “export without assignment” and “replace value, including NULL.”
-* **Validation test:** Create `KEY=old`, call `env_set(&list, "KEY", NULL)`, and verify the intended contract: either `KEY` becomes export-only and is omitted from `env_to_array`, or the API documentation is changed and a separate clearing test is added.
 
 
 
