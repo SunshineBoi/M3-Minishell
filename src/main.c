@@ -86,10 +86,7 @@ int	minishell(char **envp)
 			break ;
 		}
 		if (g_signal == SIGINT)
-		{
-			handle_sigint_in_main(app, prompt);
-			continue ;
-		}
+			handle_sigint_in_main(app);
 		if (*prompt)
 			add_history(prompt);
 		process_prompt(app, prompt);

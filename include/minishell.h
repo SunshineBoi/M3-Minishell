@@ -204,6 +204,6 @@ void	handlesig_prompt(int sig);
 void	signals_at_prompt(void);
 void	signals_ignore(void);
 void	signals_default(void);
-void	handle_sigint_in_main(t_app *app, char *prompt);
+void	handle_sigint_in_main(t_app *app);
 
 #endif
