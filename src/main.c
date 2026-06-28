@@ -30,10 +30,13 @@ void	process_prompt(t_app *app, char *str)
 	app->tokensll = NULL;
 	if (!app->ast)
 		return ;
+	if (update_env_array(app) != 0)
+		return (setexit(app, EX_ERR), ast_free(app->ast));
 	if (expand_ast(app, app->ast) != 0)
 		return (ast_free(app->ast));
 	execute_ast(app, app->ast);
-	update_env_array(app);
+	if (update_env_array(app) != 0)
+		setexit(app, EX_ERR);
 	ast_free(app->ast);
 	app->ast = NULL;
 }

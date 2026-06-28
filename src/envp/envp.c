@@ -234,14 +234,15 @@ char	**env_to_array(t_env *list)
 	return (arr);
 }
 
-void	update_env_array(t_app *app)
+int	update_env_array(t_app *app)
 {
 	char	**new_envp;
 
 	new_envp = env_to_array(app->env_list);
 	if (!new_envp)
-		return ;
+		return (printerr_syscall(ERR_MALLOC), ERR_MALLOC);
 	if (app->envp)
 		freelst(app->envp);
 	app->envp = new_envp;
+	return (EX_OK);
 }

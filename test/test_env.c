@@ -2,6 +2,8 @@
 #include <string.h>
 #include "minishell.h"
 
+extern int	g_malloc_fail_countdown;
+
 Test(env, init_get_set_unset)
 {
 	char envp0[] = "A=1";
@@ -92,4 +94,22 @@ Test(env, unset_head_middle_and_missing)
 	cr_assert_str_eq(env_get(list, "B"), "2");
 	cr_assert_eq(env_unset(&list, "NOPE"), 0);
 	env_free(list);
+}
+
+Test(env, update_env_array_reports_failure_and_keeps_old_snapshot)
+{
+	t_app	app;
+
+	app.env_list = NULL;
+	cr_assert_eq(env_set(&app.env_list, "A", "old"), 0);
+	app.envp = env_to_array(app.env_list);
+	cr_assert_not_null(app.envp);
+	cr_assert_str_eq(app.envp[0], "A=old");
+	cr_assert_eq(env_set(&app.env_list, "A", "new"), 0);
+	g_malloc_fail_countdown = 0;
+	cr_assert_eq(update_env_array(&app), ERR_MALLOC);
+	g_malloc_fail_countdown = -1;
+	cr_assert_str_eq(app.envp[0], "A=old");
+	freelst(app.envp);
+	env_free(app.env_list);
 }

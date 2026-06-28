@@ -99,7 +99,7 @@ static int	is_valid_assignment(const char *arg, char **name, char **value)
 	return (*value != NULL || (free(*name), 0));
 }
 
-static void	apply_assignment(t_app *app, char *name, char *raw, int last_status)
+static int	apply_assignment(t_app *app, char *name, char *raw, int last_status)
 {
 	char	*val;
 	char	**w;
@@ -116,13 +116,18 @@ static void	apply_assignment(t_app *app, char *name, char *raw, int last_status)
 	else
 		val = ft_strdup("");
 	free(raw);
-	env_set(&app->env_list, name, val);
+	if (env_set(&app->env_list, name, val) != 0)
+	{
+		free(name);
+		free(val);
+		return (ERR_MALLOC);
+	}
 	free(name);
 	free(val);
-	update_env_array(app);
+	return (update_env_array(app));
 }
 
-static void	process_assignments(t_app *app, t_cmd_node *cmd, int last_status)
+static int	process_assignments(t_app *app, t_cmd_node *cmd, int last_status)
 {
 	char	*name;
 	char	*raw_val;
@@ -132,7 +137,8 @@ static void	process_assignments(t_app *app, t_cmd_node *cmd, int last_status)
 	{
 		if (!is_valid_assignment(cmd->argv[0], &name, &raw_val))
 			break ;
-		apply_assignment(app, name, raw_val, last_status);
+		if (apply_assignment(app, name, raw_val, last_status) != 0)
+			return (ERR_MALLOC);
 		free(cmd->argv[0]);
 		j = 0;
 		while (cmd->argv[j])
@@ -141,6 +147,7 @@ static void	process_assignments(t_app *app, t_cmd_node *cmd, int last_status)
 			j++;
 		}
 	}
+	return (0);
 }
 
 static int	expand_cmd_node(t_app *app, t_cmd_node *cmd)
@@ -151,7 +158,8 @@ static int	expand_cmd_node(t_app *app, t_cmd_node *cmd)
 	int			last_status;
 
 	last_status = app->exitcode;
-	process_assignments(app, cmd, last_status);
+	if (process_assignments(app, cmd, last_status) != 0)
+		return (ERR_MALLOC);
 	envp = app->envp;
 	if (expand_argv(cmd->argv, envp, last_status, &expanded) != 0)
 		return (ERR_MALLOC);
