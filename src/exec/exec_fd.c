@@ -181,6 +181,24 @@ static char	*expand_heredoc_line(const char *line, char **envp, int last_status)
 	return (sb.buf);
 }
 
+static int	write_all(int fd, const char *buf, size_t len)
+{
+	ssize_t	written;
+	size_t	total;
+
+	total = 0;
+	while (total < len)
+	{
+		written = write(fd, buf + total, len - total);
+		if (written == -1)
+			return (-1);
+		if (written == 0)
+			return (-1);
+		total += written;
+	}
+	return (0);
+}
+
 static int	write_expanded(t_app *app, int fd, char *line, int is_quoted)
 {
 	char	*expanded;
@@ -193,8 +211,9 @@ static int	write_expanded(t_app *app, int fd, char *line, int is_quoted)
 			return (-1);
 		line = expanded;
 	}
-	write(fd, line, ft_strlen(line));
-	write(fd, "\n", 1);
+	if (write_all(fd, line, ft_strlen(line)) == -1
+		|| write_all(fd, "\n", 1) == -1)
+		return (free(line), -1);
 	free(line);
 	return (0);
 }
@@ -218,7 +237,7 @@ static char	*get_next_line_non_interactive(void)
 	return (line);
 }
 
-static int	read_heredoc_loop(t_app *app, int *pipe_fds, const char *delim, int is_quoted)
+static int	read_heredoc_loop(t_app *app, int fd, const char *delim, int is_quoted)
 {
 	char	*line;
 
@@ -240,37 +259,101 @@ static int	read_heredoc_loop(t_app *app, int *pipe_fds, const char *delim, int i
 		}
 		if (ft_strcmp(line, delim) == 0)
 			return (free(line), 0);
-		if (write_expanded(app, pipe_fds[1], line, is_quoted) == -1)
+		if (write_expanded(app, fd, line, is_quoted) == -1)
 			return (-1);
 	}
 	return (0);
 }
 
+static char	*make_heredoc_path(int counter)
+{
+	char	*pid;
+	char	*idx;
+	char	*prefix_pid;
+	char	*prefix_pid_sep;
+	char	*path;
+
+	pid = ft_itoa((int)getpid());
+	idx = ft_itoa(counter);
+	if (!pid || !idx)
+		return (free(pid), free(idx), NULL);
+	prefix_pid = ft_strjoin("/tmp/minishell_hd_", pid);
+	prefix_pid_sep = ft_strjoin(prefix_pid, "_");
+	path = ft_strjoin(prefix_pid_sep, idx);
+	free(pid);
+	free(idx);
+	free(prefix_pid);
+	free(prefix_pid_sep);
+	return (path);
+}
+
+static int	open_heredoc_write_file(char **path)
+{
+	static int	counter;
+	int			tries;
+	int			fd;
+
+	tries = 0;
+	while (tries < 10000)
+	{
+		*path = make_heredoc_path(counter++);
+		if (!*path)
+			return (-1);
+		fd = open(*path, O_CREAT | O_EXCL | O_WRONLY, 0600);
+		if (fd != -1)
+			return (fd);
+		free(*path);
+		*path = NULL;
+		if (errno != EEXIST)
+			return (-1);
+		tries++;
+	}
+	return (-1);
+}
+
+static int	reopen_heredoc_read_file(char *path)
+{
+	int	fd;
+
+	fd = open(path, O_RDONLY);
+	unlink(path);
+	return (fd);
+}
+
 static int	collect_one_heredoc(t_app *app, t_redir *redir)
 {
-	int					pipe_fds[2];
+	int					write_fd;
+	int					read_fd;
 	char				*delim;
+	char				*path;
 	int					is_quoted;
 	struct sigaction	sa;
 	struct sigaction	old_sa;
 	int					res;
 
+	path = NULL;
 	delim = parse_heredoc_delimiter(redir->target, &is_quoted);
 	if (!delim)
 		return (-1);
-	if (pipe(pipe_fds) == -1)
+	write_fd = open_heredoc_write_file(&path);
+	if (write_fd == -1)
 		return (free(delim), -1);
 	sigemptyset(&sa.sa_mask);
 	sa.sa_flags = 0;
 	sa.sa_handler = handlesig_heredoc;
 	sigaction(SIGINT, &sa, &old_sa);
-	res = read_heredoc_loop(app, pipe_fds, delim, is_quoted);
+	res = read_heredoc_loop(app, write_fd, delim, is_quoted);
 	sigaction(SIGINT, &old_sa, NULL);
 	free(delim);
-	close(pipe_fds[1]);
 	if (res == -1)
-		return (close(pipe_fds[0]), -1);
-	redir->fd = pipe_fds[0];
+		return (close(write_fd), unlink(path), free(path), -1);
+	if (close(write_fd) == -1)
+		return (unlink(path), free(path), -1);
+	read_fd = reopen_heredoc_read_file(path);
+	free(path);
+	if (read_fd == -1)
+		return (-1);
+	redir->fd = read_fd;
 	return (0);
 }
 
