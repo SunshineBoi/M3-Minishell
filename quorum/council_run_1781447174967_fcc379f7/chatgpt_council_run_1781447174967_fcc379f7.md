@@ -37,17 +37,7 @@ Run ID: council_run_1781447174967_fcc379f7
 
 
 
-### 4. Ownership of `app->envp` is not encoded before it is freed
-
-
-* **Classification:** Unverifiable
-* **Severity:** Critical
-* **Confidence:** Medium
-* **Evidence:** `Documents/42-Projects/Minishell/minishell-github/src/envp/envp.c:226-235`
-* **Reasoning:** `update_env_array` unconditionally frees a non-NULL `app->envp`. This is safe only if `app->envp` always points to a heap-allocated, NULL-terminated array whose strings are individually owned. If it can initially alias the process-provided `envp`, a borrowed array, or static storage, this causes invalid frees.
-* **Missing context:** The definition and initialization of `t_app`, the assignment history of `app->envp`, and `freelst` are omitted.
-* **Implementation options:** Establish a strict invariant that `app->envp` is always owned, duplicate the initial environment during application initialization, or track ownership explicitly.
-* **Validation test:** Trace every assignment to `app->envp`. Then run startup followed by the first `update_env_array` under ASan. Include a test where the initial array is borrowed; ownership-safe code must not free it.
+`
 
 
 
