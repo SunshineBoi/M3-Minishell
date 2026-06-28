@@ -41,6 +41,7 @@ t_env	*env_init(char **envp)
 	t_env	*tail;
 	t_env	*node;
 	char	*eq;
+	char	*key;
 	size_t	i;
 
 	head = NULL;
@@ -54,9 +55,11 @@ t_env	*env_init(char **envp)
 			i++;
 			continue ;
 		}
-		*eq = '\0';
-		node = env_new_node(envp[i], eq + 1);
-		*eq = '=';
+		key = ft_strndup(envp[i], (int)(eq - envp[i]));
+		if (!key)
+			return (env_free(head), NULL);
+		node = env_new_node(key, eq + 1);
+		free(key);
 		if (!node)
 			return (env_free(head), NULL);
 		if (!head)
