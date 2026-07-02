@@ -206,4 +206,11 @@ void	signals_ignore(void);
 void	signals_default(void);
 void	handle_sigint_in_main(t_app *app);
 
+/* === main.c === */
+t_app	*init_app(char **envp);
+
+/* === minishell.c === */
+int		minishell(char **envp);
+void	process_prompt(t_app *app, char *str);
+
 #endif
