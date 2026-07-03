@@ -1,3 +1,15 @@
+/* ************************************************************************** */
+/*                                                                            */
+/*                                                        :::      ::::::::   */
+/*   lexer.c                                            :+:      :+:    :+:   */
+/*                                                    +:+ +:+         +:+     */
+/*   By: kong <kong@student.42singapore.sg>         +#+  +:+       +#+        */
+/*                                                +#+#+#+#+#+   +#+           */
+/*   Created: 2026/07/03 13:14:36 by kong              #+#    #+#             */
+/*   Updated: 2026/07/03 13:14:36 by kong             ###   ########.fr       */
+/*                                                                            */
+/* ************************************************************************** */
+
 #include "minishell.h"
 
 /**
@@ -26,7 +38,6 @@ static int	build_token(t_app *app, t_sll_ops *ops, char *str)
 	ops->curr = init_token();
 	if (!ops->curr)
 		return (ERR_MALLOC);
-	// process special char
 	if (isspecialsym(*str))
 	{
 		toklen = special_build(str, ops->curr);
@@ -35,7 +46,6 @@ static int	build_token(t_app *app, t_sll_ops *ops, char *str)
 	}
 	else
 	{
-		// process quotes and text
 		toklen = string_build(ops->curr, str);
 		if (toklen == ERR_QUOTE)
 			return (setexit(app, EX_SYNTAX), freetoken(ops->curr), ERR_QUOTE);
@@ -52,7 +62,7 @@ static int	build_token(t_app *app, t_sll_ops *ops, char *str)
  */
 t_tokensll	*build_tokensll(t_app *app, char *str)
 {
-	int	toklen;
+	int			toklen;
 	t_tokensll	*head;
 	t_sll_ops	*ops;
 
@@ -61,7 +71,6 @@ t_tokensll	*build_tokensll(t_app *app, char *str)
 		return (hardexit(), NULL);
 	while (*str)
 	{
-		// process whitespace
 		while (*str && iswhitespace(*str))
 			str++;
 		if (!*str)
@@ -71,7 +80,7 @@ t_tokensll	*build_tokensll(t_app *app, char *str)
 			return (freetokensll(ops->head), free(ops), NULL);
 		else if (toklen == ERR_MALLOC)
 			return (freetokensll(ops->head), free(ops), hardexit(), NULL);
-		_update_ops(ops);		
+		_update_ops(ops);
 		str += toklen;
 	}
 	head = ops->head;

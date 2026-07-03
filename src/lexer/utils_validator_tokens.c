@@ -1,3 +1,15 @@
+/* ************************************************************************** */
+/*                                                                            */
+/*                                                        :::      ::::::::   */
+/*   utils_validator_tokens.c                           :+:      :+:    :+:   */
+/*                                                    +:+ +:+         +:+     */
+/*   By: kong <kong@student.42singapore.sg>         +#+  +:+       +#+        */
+/*                                                +#+#+#+#+#+   +#+           */
+/*   Created: 2026/07/03 15:13:26 by kong              #+#    #+#             */
+/*   Updated: 2026/07/03 15:13:26 by kong             ###   ########.fr       */
+/*                                                                            */
+/* ************************************************************************** */
+
 #include "minishell.h"
 
 int	ispipe(t_token_type type)
@@ -11,80 +23,35 @@ int	isredir(t_token_type type)
 		|| type == TOK_DIRIN || type == TOK_HEREDOC);
 }
 
+/**
+ * @brief Check that a pipe token is followed by a valid token.
+ * pipe cannot end with null (bash prompts next line); 
+ * pipe cannot followed by pipe.
+ * @param tokens Pipe token to validate.
+ * @return 1 if valid, 0 on syntax error.
+ */
 int	is_valid_pipe(t_tokensll *tokens)
 {
-	// pipe cannot end with null
-	// bash behavior is to prompt next line
 	if (!tokens->next)
 		return (printerr_syntax(tokens->val), 0);
-	// pipe cannot followed by pipe
 	else if (ispipe(tokens->next->type))
 		return (printerr_syntax(tokens->next->val), 0);
 	return (1);
 }
 
+/**
+ * @brief Check that a redirection token is followed by a valid token.
+ * Cannot end with null; cannot followed by pipe; cannot followed by redir;
+ * @param tokens Redirection token to validate.
+ * @return 1 if valid, 0 on syntax error.
+ */
 int	is_valid_redir(t_tokensll *tokens)
 {
-	// redirect cannot end with null
 	if (!tokens->next)
 		return (printerr_syntax("newline"), 0);
-
-	// redir cannot followed by pipe
 	else if (ispipe(tokens->next->type))
 		return (printerr_syntax(tokens->next->val), 0);
-
-	// redir cannot followed by redir
 	else if (isredir(tokens->next->type))
 		return (printerr_syntax(tokens->next->val), 0);
-
-	// only valid if redir is followed by normal string
 	return (1);
-}
-
-static int	has_unsupported_ops(const char *val)
-{
-	if (!val)
-		return (0);
-	if (ft_strcmp(val, ";") == 0 || ft_strcmp(val, "&") == 0
-		|| ft_strcmp(val, "&&") == 0 || ft_strcmp(val, "(") == 0
-		|| ft_strcmp(val, ")") == 0)
-		return (1);
-	return (0);
-}
-
-int	validate_tokensll(t_app *app)
-{
-	t_tokensll	*tokensll;
-	int			syntax_error;
-
-	tokensll = app->tokensll;
-	if (!tokensll)
-		return (0);
-	syntax_error = 0;
-	// first token cannot be pipe
-	if (ispipe(tokensll->type))
-	{
-		app->exitcode = EX_SYNTAX;
-		printerr_syntax(tokensll->val);
-		return (-1);
-	}
-	while (tokensll)
-	{
-		if (ispipe(tokensll->type) && !is_valid_pipe(tokensll))
-			syntax_error = 1;
-		else if (isredir(tokensll->type) && !is_valid_redir(tokensll))
-			syntax_error = 1;
-		else if (tokensll->type == TOK_STR && has_unsupported_ops(tokensll->val))
-		{
-			syntax_error = 1;
-			printerr_syntax(tokensll->val);
-		}
-		if (syntax_error)
-		{
-			app->exitcode = EX_SYNTAX;
-			return (-1);
-		}
-		tokensll = tokensll->next;
-	}
-	return (0);
 }
