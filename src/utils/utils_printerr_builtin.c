@@ -1,4 +1,23 @@
+/* ************************************************************************** */
+/*                                                                            */
+/*                                                        :::      ::::::::   */
+/*   utils_printerr_builtin.c                           :+:      :+:    :+:   */
+/*                                                    +:+ +:+         +:+     */
+/*   By: kong <kong@student.42singapore.sg>         +#+  +:+       +#+        */
+/*                                                +#+#+#+#+#+   +#+           */
+/*   Created: 2026/07/03 15:39:25 by kong              #+#    #+#             */
+/*   Updated: 2026/07/03 15:39:25 by kong             ###   ########.fr       */
+/*                                                                            */
+/* ************************************************************************** */
+
 #include "minishell.h"
+
+void	printerr_syscall(t_errcode code)
+{
+	if (code == ERR_MALLOC || code == ERR_CMDNEXEC
+		|| code == ERR_PIPE || code == ERR_FORK)
+		perror("minishell");
+}
 
 void	printerr_cd(char *filename)
 {

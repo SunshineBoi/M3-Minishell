@@ -1,19 +1,16 @@
+/* ************************************************************************** */
+/*                                                                            */
+/*                                                        :::      ::::::::   */
+/*   utils_str_1.c                                      :+:      :+:    :+:   */
+/*                                                    +:+ +:+         +:+     */
+/*   By: kong <kong@student.42singapore.sg>         +#+  +:+       +#+        */
+/*                                                +#+#+#+#+#+   +#+           */
+/*   Created: 2026/07/03 15:39:46 by kong              #+#    #+#             */
+/*   Updated: 2026/07/03 15:39:46 by kong             ###   ########.fr       */
+/*                                                                            */
+/* ************************************************************************** */
+
 #include "minishell.h"
-
-/**
- * @brief Compute the length of a null-terminated string.
- * @param str Input string.
- * @return Length excluding the null terminator.
- */
-size_t	ft_strlen(const char *str)
-{
-	size_t	count;
-
-	count = 0;
-	while (str[count])
-		count++;
-	return (count);
-}
 
 /**
  * @brief Compare two null-terminated strings.
@@ -64,23 +61,15 @@ char	*ft_strchr(const char *s, int c)
 }
 
 /**
- * @brief Convert an integer to a null-terminated string.
- * @param n Integer to convert.
- * @return Newly allocated string, or NULL on failure.
+ * @brief Fill buf with the decimal digits of num, least significant first.
+ * @param num Non-negative value to convert.
+ * @param buf Destination buffer.
+ * @return Number of digits written.
  */
-char	*ft_itoa(int n)
+static int	_itoa_digits(long num, char *buf)
 {
-	char	buf[12];
-	int		i;
-	long	num;
-	int		neg;
-	char	*out;
-	int		j;
+	int	i;
 
-	num = n;
-	neg = (num < 0);
-	if (neg)
-		num = -num;
 	i = 0;
 	if (num == 0)
 		buf[i++] = '0';
@@ -89,7 +78,27 @@ char	*ft_itoa(int n)
 		buf[i++] = (char)('0' + (num % 10));
 		num /= 10;
 	}
-	if (neg)
+	return (i);
+}
+
+/**
+ * @brief Convert an integer to a null-terminated string.
+ * @param n Integer to convert.
+ * @return Newly allocated string, or NULL on failure.
+ */
+char	*ft_itoa(int n)
+{
+	char	buf[12];
+	long	num;
+	int		i;
+	char	*out;
+	int		j;
+
+	num = n;
+	if (n < 0)
+		num = -num;
+	i = _itoa_digits(num, buf);
+	if (n < 0)
 		buf[i++] = '-';
 	out = malloc((size_t)i + 1);
 	if (!out)
@@ -100,5 +109,3 @@ char	*ft_itoa(int n)
 		out[j++] = buf[i];
 	return (out);
 }
-
-

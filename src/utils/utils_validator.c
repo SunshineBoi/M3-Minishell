@@ -1,3 +1,15 @@
+/* ************************************************************************** */
+/*                                                                            */
+/*                                                        :::      ::::::::   */
+/*   utils_validator.c                                  :+:      :+:    :+:   */
+/*                                                    +:+ +:+         +:+     */
+/*   By: kong <kong@student.42singapore.sg>         +#+  +:+       +#+        */
+/*                                                +#+#+#+#+#+   +#+           */
+/*   Created: 2026/07/03 15:40:00 by kong              #+#    #+#             */
+/*   Updated: 2026/07/03 15:40:00 by kong             ###   ########.fr       */
+/*                                                                            */
+/* ************************************************************************** */
+
 #include "minishell.h"
 
 /**
@@ -19,20 +31,6 @@ int	iswhitespace(int ch)
 int	isspecialsym(int ch)
 {
 	return (ch == '|' || ch == '>' || ch == '<');
-}
-
-int	ft_strhaschr(char *str, char ch)
-{
-	int	i;
-
-	i = 0;
-	while (str[i])
-	{
-		if (str[i] == ch)
-			return (1);
-		i++;
-	}
-	return (0);
 }
 
 static void	update_num_sign(const char *s, int *sign, int *pos)

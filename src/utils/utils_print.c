@@ -1,3 +1,15 @@
+/* ************************************************************************** */
+/*                                                                            */
+/*                                                        :::      ::::::::   */
+/*   utils_print.c                                      :+:      :+:    :+:   */
+/*                                                    +:+ +:+         +:+     */
+/*   By: kong <kong@student.42singapore.sg>         +#+  +:+       +#+        */
+/*                                                +#+#+#+#+#+   +#+           */
+/*   Created: 2026/07/03 15:38:47 by kong              #+#    #+#             */
+/*   Updated: 2026/07/03 15:38:47 by kong             ###   ########.fr       */
+/*                                                                            */
+/* ************************************************************************** */
+
 #include "minishell.h"
 
 /**
@@ -14,7 +26,6 @@ void	ft_putstr_fd(char *s, int fd)
 
 void	print_tokensll(t_tokensll *tokensll)
 {
-	/* for testing use */
 	while (tokensll)
 	{
 		printf("[token val]: %s$", tokensll->val);
@@ -22,4 +33,3 @@ void	print_tokensll(t_tokensll *tokensll)
 		tokensll = tokensll->next;
 	}
 }
-

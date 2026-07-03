@@ -1,4 +1,45 @@
+/* ************************************************************************** */
+/*                                                                            */
+/*                                                        :::      ::::::::   */
+/*   utils_str_2.c                                      :+:      :+:    :+:   */
+/*                                                    +:+ +:+         +:+     */
+/*   By: kong <kong@student.42singapore.sg>         +#+  +:+       +#+        */
+/*                                                +#+#+#+#+#+   +#+           */
+/*   Created: 2026/07/03 15:39:51 by kong              #+#    #+#             */
+/*   Updated: 2026/07/03 15:45:35 by kong             ###   ########.fr       */
+/*                                                                            */
+/* ************************************************************************** */
+
 #include "minishell.h"
+
+/**
+ * @brief Compute the length of a null-terminated string.
+ * @param str Input string.
+ * @return Length excluding the null terminator.
+ */
+size_t	ft_strlen(const char *str)
+{
+	size_t	count;
+
+	count = 0;
+	while (str[count])
+		count++;
+	return (count);
+}
+
+int	ft_strhaschr(char *str, char ch)
+{
+	int	i;
+
+	i = 0;
+	while (str[i])
+	{
+		if (str[i] == ch)
+			return (1);
+		i++;
+	}
+	return (0);
+}
 
 /**
  * @brief Duplicate a null-terminated string.
