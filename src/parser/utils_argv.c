@@ -1,3 +1,15 @@
+/* ************************************************************************** */
+/*                                                                            */
+/*                                                        :::      ::::::::   */
+/*   utils_argv.c                                       :+:      :+:    :+:   */
+/*                                                    +:+ +:+         +:+     */
+/*   By: kong <kong@student.42singapore.sg>         +#+  +:+       +#+        */
+/*                                                +#+#+#+#+#+   +#+           */
+/*   Created: 2026/07/03 17:20:55 by kong              #+#    #+#             */
+/*   Updated: 2026/07/03 17:21:14 by kong             ###   ########.fr       */
+/*                                                                            */
+/* ************************************************************************** */
+
 #include "minishell.h"
 
 int	argv_builder_init(t_argv_builder *ab)
@@ -14,16 +26,15 @@ int	argv_builder_init(t_argv_builder *ab)
 int	argv_builder_push(t_argv_builder *ab, char *word)
 {
 	char	**newargv;
+	size_t	old_cap;
 
 	if (ab->count + 1 >= ab->cap)
 	{
-		size_t	old_cap;
-
 		old_cap = ab->cap;
 		ab->cap *= 2;
 		newargv = (char **)ft_realloc((char *)ab->argv,
-					sizeof(char *) * old_cap,
-					sizeof(char *) * ab->cap);
+				sizeof(char *) * old_cap,
+				sizeof(char *) * ab->cap);
 		if (!newargv)
 			return (ERR_MALLOC);
 		ab->argv = newargv;
@@ -51,23 +62,7 @@ void	argv_builder_free(t_argv_builder *ab)
 	ab->cap = 0;
 }
 
-// void	free_argv(char **argv)
-// {
-// 	size_t	i;
-
-// 	if (!argv)
-// 		return ;
-// 	i = 0;
-// 	while (argv[i])
-// 	{
-// 		free(argv[i]);
-// 		i++;
-// 	}
-// 	free(argv);
-// }
-
-int	push_words_to_builder(t_argv_builder *ab, char **words,
-		size_t count)
+int	push_words_to_builder(t_argv_builder *ab, char **words, size_t count)
 {
 	size_t	j;
 
