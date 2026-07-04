@@ -1,3 +1,15 @@
+/* ************************************************************************** */
+/*                                                                            */
+/*                                                        :::      ::::::::   */
+/*   exec_heredoc_expand.c                              :+:      :+:    :+:   */
+/*                                                    +:+ +:+         +:+     */
+/*   By: lkai-yua <lkai-yua@student.42.fr>          +#+  +:+       +#+        */
+/*                                                +#+#+#+#+#+   +#+           */
+/*   Created: 2026/07/04 20:02:32 by lkai-yua          #+#    #+#             */
+/*   Updated: 2026/07/04 20:02:35 by lkai-yua         ###   ########.fr       */
+/*                                                                            */
+/* ************************************************************************** */
+
 #include "minishell.h"
 #include "exec_heredoc.h"
 
@@ -31,14 +43,14 @@ char	*parse_heredoc_delimiter(const char *target, int *is_quoted)
 }
 
 static void	append_expanded_var(t_strbuf *sb, const char *line, size_t *i,
-		char **envp, int status)
+		t_app *app)
 {
 	char	*status_str;
 	size_t	var_len;
 
 	if (line[*i + 1] == '?')
 	{
-		status_str = itoa_status(status);
+		status_str = itoa_status(app->exitcode);
 		if (status_str)
 			sb_push_str(sb, status_str);
 		free(status_str);
@@ -47,7 +59,7 @@ static void	append_expanded_var(t_strbuf *sb, const char *line, size_t *i,
 	else if (is_name_start(line[*i + 1]))
 	{
 		var_len = var_name_len(line + *i + 1);
-		sb_push_str(sb, env_lookup(envp, line + *i + 1, var_len));
+		sb_push_str(sb, env_lookup(app->envp, line + *i + 1, var_len));
 		*i += 1 + var_len;
 	}
 	else
@@ -57,7 +69,7 @@ static void	append_expanded_var(t_strbuf *sb, const char *line, size_t *i,
 	}
 }
 
-char	*expand_heredoc_line(const char *line, char **envp, int last_status)
+char	*expand_heredoc_line(const char *line, t_app *app)
 {
 	t_strbuf	sb;
 	size_t		i;
@@ -68,7 +80,7 @@ char	*expand_heredoc_line(const char *line, char **envp, int last_status)
 	while (line[i])
 	{
 		if (line[i] == '$' && line[i + 1])
-			append_expanded_var(&sb, line, &i, envp, last_status);
+			append_expanded_var(&sb, line, &i, app);
 		else
 		{
 			sb_push_char(&sb, line[i]);

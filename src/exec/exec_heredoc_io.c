@@ -1,3 +1,15 @@
+/* ************************************************************************** */
+/*                                                                            */
+/*                                                        :::      ::::::::   */
+/*   exec_heredoc_io.c                                  :+:      :+:    :+:   */
+/*                                                    +:+ +:+         +:+     */
+/*   By: lkai-yua <lkai-yua@student.42.fr>          +#+  +:+       +#+        */
+/*                                                +#+#+#+#+#+   +#+           */
+/*   Created: 2026/07/04 20:02:32 by lkai-yua          #+#    #+#             */
+/*   Updated: 2026/07/04 20:02:35 by lkai-yua         ###   ########.fr       */
+/*                                                                            */
+/* ************************************************************************** */
+
 #include "minishell.h"
 #include "exec_heredoc.h"
 
@@ -25,7 +37,7 @@ int	write_expanded(t_app *app, int fd, char *line, int is_quoted)
 
 	if (!is_quoted)
 	{
-		expanded = expand_heredoc_line(line, app->envp, app->exitcode);
+		expanded = expand_heredoc_line(line, app);
 		free(line);
 		if (!expanded)
 			return (-1);
@@ -74,7 +86,8 @@ int	read_heredoc_loop(t_app *app, int fd, const char *delim, int is_quoted)
 			return (free(line), -1);
 		if (!line)
 		{
-			ft_putstr_fd("minishell: warning: here-document delimited by end-of-file\n", 2);
+			ft_putstr_fd("minishell: warning: here-document ", 2);
+			ft_putstr_fd("delimited by end-of-file\n", 2);
 			return (0);
 		}
 		if (ft_strcmp(line, delim) == 0)

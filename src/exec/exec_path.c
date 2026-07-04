@@ -91,7 +91,6 @@ char	*resolvecmdpath(t_app *app, char **argv)
 		return (_cmdwithpath(app, cmd));
 	pathlst = getrawpathlst(app, "PATH=");
 	if (!pathlst)
-		return (setexit(app, EX_CMD_NOTFOUND), printerr_cmdnfound(cmd), NULL);
 		return (_pathmissing(app, cmd));
 	goodpath = _matchcmdpath(app, pathlst, cmd);
 	freelst(pathlst);

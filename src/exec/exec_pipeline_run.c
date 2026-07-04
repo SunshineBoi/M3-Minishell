@@ -1,3 +1,14 @@
+/* ************************************************************************** */
+/*                                                                            */
+/*                                                        :::      ::::::::   */
+/*   exec_pipeline_run.c                                :+:      :+:    :+:   */
+/*                                                    +:+ +:+         +:+     */
+/*   By: lkai-yua <lkai-yua@student.42.fr>          +#+  +:+       +#+        */
+/*                                                +#+#+#+#+#+   +#+           */
+/*   Created: 2026/07/04 19:55:07 by lkai-yua          #+#    #+#             */
+/*   Updated: 2026/07/04 19:57:26 by lkai-yua         ###   ########.fr       */
+/*                                                                            */
+/* ************************************************************************** */
 
 #include "minishell.h"
 
@@ -6,7 +17,6 @@ void	get_lastcmdstatus(t_app *app, pid_t *pids, int id_lastpid)
 	int	status;
 
 	status = 0;
-	// when waitpid is blocking, a signal can interrupt and cause it to return -1
 	while (waitpid(pids[id_lastpid], &status, 0) == -1)
 	{
 		if (errno != EINTR)
@@ -39,6 +49,19 @@ void	wait_allpids(pid_t *pids, int pid_id)
 		i++;
 	}
 }
+
+static int	handle_execve_err(t_app *app, t_cmd_node *cmdnode,
+	char **saved_envp, char *cmdpath)
+{
+	free(cmdpath);
+	setexecerrno(app);
+	app->envp = saved_envp;
+	if (!ft_strhaschr(cmdnode->argv[0], '/')
+		&& app->exitcode == EX_CMD_NOTFOUND)
+		return (printerr_cmdnfound(cmdnode->argv[0]), -1);
+	return (ft_perror(cmdnode->argv[0]), -1);
+}
+
 int	do_exec(t_app *app, t_cmd_node *cmdnode)
 {
 	char	*cmdpath;
@@ -59,15 +82,7 @@ int	do_exec(t_app *app, t_cmd_node *cmdnode)
 	if (!cmdpath)
 		return (app->envp = saved_envp, -1);
 	if (execve(cmdpath, cmdnode->argv, app->envp) == -1)
-	{
-		free(cmdpath);
-		setexecerrno(app);
-		if (!ft_strhaschr(cmdnode->argv[0], '/') &&
-			app->exitcode == EX_CMD_NOTFOUND)
-			return (app->envp = saved_envp,
-				printerr_cmdnfound(cmdnode->argv[0]), -1);
-		return (app->envp = saved_envp, ft_perror(cmdnode->argv[0]), -1);
-	}
+		return (handle_execve_err(app, cmdnode, saved_envp, cmdpath));
 	return (0);
 }
 

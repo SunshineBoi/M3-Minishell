@@ -1,3 +1,15 @@
+/* ************************************************************************** */
+/*                                                                            */
+/*                                                        :::      ::::::::   */
+/*   exec_heredoc_tmp.c                                 :+:      :+:    :+:   */
+/*                                                    +:+ +:+         +:+     */
+/*   By: lkai-yua <lkai-yua@student.42.fr>          +#+  +:+       +#+        */
+/*                                                +#+#+#+#+#+   +#+           */
+/*   Created: 2026/07/04 20:02:32 by lkai-yua          #+#    #+#             */
+/*   Updated: 2026/07/04 20:02:35 by lkai-yua         ###   ########.fr       */
+/*                                                                            */
+/* ************************************************************************** */
+
 #include "minishell.h"
 #include "exec_heredoc.h"
 
@@ -54,4 +66,19 @@ int	reopen_heredoc_read_file(char *path)
 	fd = open(path, O_RDONLY);
 	unlink(path);
 	return (fd);
+}
+
+int	finish_heredoc_file(char *path, int write_fd, int res)
+{
+	int	read_fd;
+
+	if (res == -1)
+		return (close(write_fd), unlink(path), free(path), -1);
+	if (close(write_fd) == -1)
+		return (unlink(path), free(path), -1);
+	read_fd = reopen_heredoc_read_file(path);
+	free(path);
+	if (read_fd == -1)
+		return (-1);
+	return (read_fd);
 }

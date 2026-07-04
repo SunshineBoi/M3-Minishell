@@ -1,3 +1,15 @@
+/* ************************************************************************** */
+/*                                                                            */
+/*                                                        :::      ::::::::   */
+/*   exec_heredoc.c                                     :+:      :+:    :+:   */
+/*                                                    +:+ +:+         +:+     */
+/*   By: lkai-yua <lkai-yua@student.42.fr>          +#+  +:+       +#+        */
+/*                                                +#+#+#+#+#+   +#+           */
+/*   Created: 2026/07/04 20:02:32 by lkai-yua          #+#    #+#             */
+/*   Updated: 2026/07/04 20:02:35 by lkai-yua         ###   ########.fr       */
+/*                                                                            */
+/* ************************************************************************** */
+
 #include "minishell.h"
 #include "exec_heredoc.h"
 
@@ -7,16 +19,23 @@ void	handlesig_heredoc(int sig)
 	write(1, "\n", 1);
 }
 
+static void	set_heredoc_sigint(struct sigaction *old_sa)
+{
+	struct sigaction	sa;
+
+	sigemptyset(&sa.sa_mask);
+	sa.sa_flags = 0;
+	sa.sa_handler = handlesig_heredoc;
+	sigaction(SIGINT, &sa, old_sa);
+}
+
 static int	collect_one_heredoc(t_app *app, t_redir *redir)
 {
-	int					write_fd;
-	int					read_fd;
 	char				*delim;
 	char				*path;
 	int					is_quoted;
-	struct sigaction	sa;
+	int					write_fd;
 	struct sigaction	old_sa;
-	int					res;
 
 	path = NULL;
 	delim = parse_heredoc_delimiter(redir->target, &is_quoted);
@@ -25,22 +44,13 @@ static int	collect_one_heredoc(t_app *app, t_redir *redir)
 	write_fd = open_heredoc_write_file(&path);
 	if (write_fd == -1)
 		return (free(delim), -1);
-	sigemptyset(&sa.sa_mask);
-	sa.sa_flags = 0;
-	sa.sa_handler = handlesig_heredoc;
-	sigaction(SIGINT, &sa, &old_sa);
-	res = read_heredoc_loop(app, write_fd, delim, is_quoted);
+	set_heredoc_sigint(&old_sa);
+	redir->fd = read_heredoc_loop(app, write_fd, delim, is_quoted);
 	sigaction(SIGINT, &old_sa, NULL);
 	free(delim);
-	if (res == -1)
-		return (close(write_fd), unlink(path), free(path), -1);
-	if (close(write_fd) == -1)
-		return (unlink(path), free(path), -1);
-	read_fd = reopen_heredoc_read_file(path);
-	free(path);
-	if (read_fd == -1)
+	redir->fd = finish_heredoc_file(path, write_fd, redir->fd);
+	if (redir->fd == -1)
 		return (-1);
-	redir->fd = read_fd;
 	return (0);
 }
 
