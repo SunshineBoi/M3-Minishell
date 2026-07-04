@@ -48,14 +48,14 @@ int	builtin_exit(char **argv, t_app *app)
 		env_free(app->env_list);
 		exit(exitcode);
 	}
-	if (argc > 2)
-		return (errmsg("exit", NULL, "too many arguments"), EX_ERR);
 	if (!is_numeric(argv[1], &val))
 	{
 		errmsg("exit", argv[1], "numeric argument required");
 		env_free(app->env_list);
 		exit(EX_SYNTAX);
 	}
+	if (argc > 2)
+		return (errmsg("exit", NULL, "too many arguments"), EX_ERR);
 	env_free(app->env_list);
 	exit((unsigned char)val);
 	return (EX_OK);
