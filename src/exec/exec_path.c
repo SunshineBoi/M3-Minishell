@@ -6,7 +6,7 @@
 /*   By: lkai-yua <lkai-yua@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/07/04 15:06:15 by lkai-yua          #+#    #+#             */
-/*   Updated: 2026/07/04 17:14:50 by lkai-yua         ###   ########.fr       */
+/*   Updated: 2026/07/04 19:51:41 by lkai-yua         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -91,6 +91,7 @@ char	*resolvecmdpath(t_app *app, char **argv)
 		return (_cmdwithpath(app, cmd));
 	pathlst = getrawpathlst(app, "PATH=");
 	if (!pathlst)
+		return (setexit(app, EX_CMD_NOTFOUND), printerr_cmdnfound(cmd), NULL);
 		return (_pathmissing(app, cmd));
 	goodpath = _matchcmdpath(app, pathlst, cmd);
 	freelst(pathlst);
