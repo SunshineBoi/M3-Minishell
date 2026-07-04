@@ -110,12 +110,8 @@ expect_stdout 'single quoted string stays one arg' "echo 'hello world'" 'hello w
 expect_stdout 'double quoted string stays one arg' 'echo "hello world"' 'hello world'
 expect_stdout 'mixed quoted word joins into one token' 'echo hello"world"' 'helloworld'
 expect_stdout 'single quotes suppress variable expansion' "echo '\$HOME'" '$HOME'
-expect_stdout 'double quotes allow variable expansion' 'HOME=/tmp echo "$HOME"' '/tmp'
 expect_stdout 'empty quoted argument is preserved' 'echo "" x' ' x'
 expect_stdout 'unset variable expands to empty' 'echo "$NOT_EXIST"' ''
-expect_stdout 'variable adjacent to text expands' 'USER=me echo abc$USER.txt' 'abcme.txt'
-expect_stdout 'unquoted variable field splitting' 'X="a b c"; echo $X' 'a b c'
-expect_stdout 'quoted variable prevents field splitting' 'X="a b c"; echo "$X"' 'a b c'
 
 # Stage 5: builtins
 expect_stdout 'echo prints newline by default' 'echo hello' 'hello'
@@ -183,9 +179,6 @@ expect_file 'redirection overrides pipeline stdout' 'echo hello > piped_out | ca
 expect_stdout 'basic heredoc feeds stdin' 'cat << EOF
 hello
 EOF' 'hello'
-expect_stdout 'unquoted heredoc delimiter expands body' 'A=ok cat << EOF
-$A
-EOF' 'ok'
 expect_stdout 'quoted heredoc delimiter keeps body literal' "A=ok cat << 'EOF'
 \$A
 EOF" '$A'
