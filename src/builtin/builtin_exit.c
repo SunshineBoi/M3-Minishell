@@ -38,25 +38,22 @@ int	builtin_exit(char **argv, t_app *app)
 {
 	long long	val;
 	int			argc;
-	int			exitcode;
 
 	ft_putstr_fd("exit\n", 2);
 	argc = argv_count(argv);
 	if (argc == 1)
 	{
-		exitcode = app->exitcode;
-		env_free(app->env_list);
-		exit(exitcode);
+		app->should_exit = 1;
+		return (app->exitcode);
 	}
 	if (!is_numeric(argv[1], &val))
 	{
 		errmsg("exit", argv[1], "numeric argument required");
-		env_free(app->env_list);
-		exit(EX_SYNTAX);
+		app->should_exit = 1;
+		return (EX_SYNTAX);
 	}
 	if (argc > 2)
 		return (errmsg("exit", NULL, "too many arguments"), EX_ERR);
-	env_free(app->env_list);
-	exit((unsigned char)val);
-	return (EX_OK);
+	app->should_exit = 1;
+	return ((unsigned char)val);
 }
