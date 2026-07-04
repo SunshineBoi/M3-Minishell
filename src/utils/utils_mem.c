@@ -1,3 +1,15 @@
+/* ************************************************************************** */
+/*                                                                            */
+/*                                                        :::      ::::::::   */
+/*   utils_mem.c                                        :+:      :+:    :+:   */
+/*                                                    +:+ +:+         +:+     */
+/*   By: kong <kong@student.42singapore.sg>         +#+  +:+       +#+        */
+/*                                                +#+#+#+#+#+   +#+           */
+/*   Created: 2026/07/03 15:38:38 by kong              #+#    #+#             */
+/*   Updated: 2026/07/03 15:38:38 by kong             ###   ########.fr       */
+/*                                                                            */
+/* ************************************************************************** */
+
 #include "minishell.h"
 
 /**
@@ -58,7 +70,6 @@ char	*ft_realloc(char *old, size_t old_size, size_t new_size)
 	{
 		new = (char *)ft_memcpy(new, old, old_size);
 		new[old_size] = '\0';
-		// on success, free old string
 		free(old);
 	}
 	return (new);

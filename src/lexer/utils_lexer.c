@@ -1,3 +1,15 @@
+/* ************************************************************************** */
+/*                                                                            */
+/*                                                        :::      ::::::::   */
+/*   utils_lexer.c                                      :+:      :+:    :+:   */
+/*                                                    +:+ +:+         +:+     */
+/*   By: kong <kong@student.42singapore.sg>         +#+  +:+       +#+        */
+/*                                                +#+#+#+#+#+   +#+           */
+/*   Created: 2026/07/03 13:50:38 by kong              #+#    #+#             */
+/*   Updated: 2026/07/03 13:50:38 by kong             ###   ########.fr       */
+/*                                                                            */
+/* ************************************************************************** */
+
 #include "minishell.h"
 
 /**
@@ -15,7 +27,6 @@ int	string_build(t_tokensll *token, char *str)
 	while (str[len] && !iswhitespace(str[len]) && !isspecialsym(str[len]))
 	{
 		built_skipped = 0;
-		// ! to confirm if need to implement backslash
 		if (str[len] == '\\')
 			built_skipped = backslash_build(str + len + 1, token);
 		else if (str[len] == '\'' || str[len] == '"')
@@ -45,7 +56,7 @@ int	special_build(char *str, t_tokensll *token)
 	if (*str == '|')
 		build_flag = build_ops_pipe(token);
 	else if (*str == '>')
-	{	
+	{
 		if (*(str + 1) && *(str + 1) == '>')
 			build_flag = build_ops_dirappnd(token);
 		else

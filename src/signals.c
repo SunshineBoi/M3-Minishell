@@ -1,7 +1,18 @@
+/* ************************************************************************** */
+/*                                                                            */
+/*                                                        :::      ::::::::   */
+/*   signals.c                                          :+:      :+:    :+:   */
+/*                                                    +:+ +:+         +:+     */
+/*   By: kong <kong@student.42singapore.sg>         +#+  +:+       +#+        */
+/*                                                +#+#+#+#+#+   +#+           */
+/*   Created: 2026/07/02 21:07:22 by kong              #+#    #+#             */
+/*   Updated: 2026/07/02 21:08:21 by kong             ###   ########.fr       */
+/*                                                                            */
+/* ************************************************************************** */
 
 #include "minishell.h"
 
-volatile sig_atomic_t g_signal = 0;
+volatile sig_atomic_t	g_signal = 0;
 
 void	handlesig_prompt(int sig)
 {
@@ -14,14 +25,12 @@ void	handlesig_prompt(int sig)
 
 void	signals_at_prompt(void)
 {
-	struct	sigaction sa;
+	struct sigaction	sa;
 
 	sigemptyset(&sa.sa_mask);
 	sa.sa_flags = 0;
 	sa.sa_handler = handlesig_prompt;
 	sigaction(SIGINT, &sa, NULL);
-
-	// ctrl + `\`
 	sa.sa_handler = SIG_IGN;
 	sigaction(SIGQUIT, &sa, NULL);
 }
@@ -33,7 +42,6 @@ void	signals_ignore(void)
 	sa.sa_handler = SIG_IGN;
 	sigemptyset(&sa.sa_mask);
 	sa.sa_flags = 0;
-
 	sigaction(SIGINT, &sa, NULL);
 	sigaction(SIGQUIT, &sa, NULL);
 }
@@ -45,7 +53,6 @@ void	signals_default(void)
 	sa.sa_handler = SIG_DFL;
 	sigemptyset(&sa.sa_mask);
 	sa.sa_flags = 0;
-
 	sigaction(SIGINT, &sa, NULL);
 	sigaction(SIGQUIT, &sa, NULL);
 	sigaction(SIGPIPE, &sa, NULL);
@@ -71,7 +78,8 @@ Context 1: AT PROMPT (readline waiting for input)
     Need: custom SIGINT handler that calls rl_replace_line + rl_redisplay
 
 Context 2: DURING COMMAND EXECUTION (waiting for child)
-    Ctrl+C  → kill the child (default), parent catches via waitpid WIFSIGNALED. Parent has to start with SIG_IGN.
+    Ctrl+C  → kill the child (default), parent catches via waitpid WIFSIGNALED. 
+	Parent has to start with SIG_IGN.
     Ctrl+\ (use SIG_DFL) → quit the child, parent prints "Quit (core dumped)"
     Parent must NOT die
     Need: parent has SIG_IGN, child has SIG_DFL

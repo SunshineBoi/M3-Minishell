@@ -1,3 +1,15 @@
+/* ************************************************************************** */
+/*                                                                            */
+/*                                                        :::      ::::::::   */
+/*   parser.c                                           :+:      :+:    :+:   */
+/*                                                    +:+ +:+         +:+     */
+/*   By: kong <kong@student.42singapore.sg>         +#+  +:+       +#+        */
+/*                                                +#+#+#+#+#+   +#+           */
+/*   Created: 2026/07/03 15:55:32 by kong              #+#    #+#             */
+/*   Updated: 2026/07/03 15:55:33 by kong             ###   ########.fr       */
+/*                                                                            */
+/* ************************************************************************** */
+
 #include "minishell.h"
 
 void	advance(t_parser *p)
@@ -18,9 +30,9 @@ static void	free_left_right(t_ast_node *left, t_ast_node *right)
 static t_ast_node	*parse_simple_command(t_parser *p)
 {
 	t_argv_builder	ab;
-	t_redir		*redirs;
-	t_ast_node	*node;
-	int			start;
+	t_redir			*redirs;
+	t_ast_node		*node;
+	int				start;
 
 	if (argv_builder_init(&ab) != 0)
 		return (NULL);
@@ -46,14 +58,13 @@ static t_ast_node	*parse_pipeline(t_parser *p)
 {
 	t_ast_node	*left;
 	t_ast_node	*right;
+	t_ast_node	*old_left;
 
 	left = parse_simple_command(p);
 	if (!left)
 		return (NULL);
 	while (p->cur && p->cur->type == TOK_PIPE)
 	{
-		t_ast_node	*old_left;
-
 		advance(p);
 		right = parse_simple_command(p);
 		if (!right)

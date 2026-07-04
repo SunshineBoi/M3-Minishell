@@ -1,3 +1,15 @@
+/* ************************************************************************** */
+/*                                                                            */
+/*                                                        :::      ::::::::   */
+/*   utils_expand_env.c                                 :+:      :+:    :+:   */
+/*                                                    +:+ +:+         +:+     */
+/*   By: kong <kong@student.42singapore.sg>         +#+  +:+       +#+        */
+/*                                                +#+#+#+#+#+   +#+           */
+/*   Created: 2026/07/03 22:04:12 by kong              #+#    #+#             */
+/*   Updated: 2026/07/03 22:04:12 by kong             ###   ########.fr       */
+/*                                                                            */
+/* ************************************************************************** */
+
 #include "minishell.h"
 
 static void	fill_buf(char *buf, int *i, long n)
@@ -40,7 +52,8 @@ size_t	var_name_len(const char *s)
 	if (!s || !is_name_start(*s))
 		return (0);
 	len = 0;
-	while (s[len] && (is_name_start(s[len]) || (s[len] >= '0' && s[len] <= '9')))
+	while (s[len] && (is_name_start(s[len])
+			|| (s[len] >= '0' && s[len] <= '9')))
 		len++;
 	return (len);
 }
@@ -48,6 +61,7 @@ size_t	var_name_len(const char *s)
 const char	*env_lookup(char **envp, const char *key, size_t key_len)
 {
 	size_t	i;
+	size_t	j;
 
 	if (!envp || !key)
 		return ("");
@@ -57,7 +71,7 @@ const char	*env_lookup(char **envp, const char *key, size_t key_len)
 		if (ft_strlen(envp[i]) > key_len
 			&& envp[i][key_len] == '=')
 		{
-			size_t	j = 0;
+			j = 0;
 			while (j < key_len && envp[i][j] == key[j])
 				j++;
 			if (j == key_len)

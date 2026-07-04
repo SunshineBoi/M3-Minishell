@@ -136,7 +136,6 @@ void	errmsg(const char *prefix, const char *arg, const char *msg);
 
 
 /* === utils_printerr.c === */
-void	printerr_syscall(t_errcode code);
 void	printerr_syntax(char *tokval);
 void	printerr_quotes(void);
 void	printerr_redir(char *filename);
@@ -145,6 +144,7 @@ void	ft_perror(char *msg);
 
 
 /* === utils_printerr_builtin.c === */
+void	printerr_syscall(t_errcode code);
 void	printerr_cd(char *filename);
 
 
@@ -174,6 +174,13 @@ char	*ft_strjoin(const char *s1, const char *s2);
 int		ft_strncmp(const char *s1, const char *s2, size_t n);
 char	*ft_strchr(const char *s, int c);
 char	*ft_itoa(int n);
+/**
+ * @brief Check if str contains character ch.
+ * @param str String to search.
+ * @param ch Character to look for.
+ * @return 1 if found, 0 otherwise.
+ */
+int		ft_strhaschr(char *str, char ch);
 
 
 /* === utils_validator.c === */
@@ -189,13 +196,6 @@ int		iswhitespace(int ch);
  * @return Nonzero if special, zero otherwise.
  */
 int		isspecialsym(int ch);
-/**
- * @brief Check if str contains character ch.
- * @param str String to search.
- * @param ch Character to look for.
- * @return 1 if found, 0 otherwise.
- */
-int		ft_strhaschr(char *str, char ch);
 int		is_numeric(const char *s, long long *val);
 
 
@@ -205,5 +205,12 @@ void	signals_at_prompt(void);
 void	signals_ignore(void);
 void	signals_default(void);
 void	handle_sigint_in_main(t_app *app);
+
+/* === main.c === */
+t_app	*init_app(char **envp);
+
+/* === minishell.c === */
+int		minishell(char **envp);
+void	process_prompt(t_app *app, char *str);
 
 #endif

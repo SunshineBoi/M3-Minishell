@@ -83,6 +83,8 @@ int			ispipe(t_token_type type);
 int			isredir(t_token_type type);
 int			is_valid_pipe(t_tokensll *tokens);
 int			is_valid_redir(t_tokensll *tokens);
+
+/* === validator_tokens.c === */
 int			validate_tokensll(t_app *app);
 
 #endif

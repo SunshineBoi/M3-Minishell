@@ -1,5 +1,16 @@
-#include "minishell.h"
+/* ************************************************************************** */
+/*                                                                            */
+/*                                                        :::      ::::::::   */
+/*   utils_lexer_build.c                                :+:      :+:    :+:   */
+/*                                                    +:+ +:+         +:+     */
+/*   By: kong <kong@student.42singapore.sg>         +#+  +:+       +#+        */
+/*                                                +#+#+#+#+#+   +#+           */
+/*   Created: 2026/07/03 13:50:12 by kong              #+#    #+#             */
+/*   Updated: 2026/07/03 13:50:12 by kong             ###   ########.fr       */
+/*                                                                            */
+/* ************************************************************************** */
 
+#include "minishell.h"
 
 /**
  * @brief Ensure token buffer can hold at least new_size bytes.
@@ -66,10 +77,8 @@ int	quotes_build(char *str, t_tokensll *token, char quote)
 	quote_len = _quotes_build_helper(str, quote);
 	if (quote_len < 0)
 		return (quote_len);
-	// adjust buffer size if needed
 	if (_resizebuffer(token, start_i, start_i + quote_len) == ERR_MALLOC)
 		return (printerr_syscall(ERR_MALLOC), ERR_MALLOC);
-	// starts appending
 	ft_memcpy((token->val) + start_i, str, quote_len);
 	token->val[quote_len + start_i] = '\0';
 	return (quote_len);
@@ -94,7 +103,6 @@ int	char_build(char ch, t_tokensll *token)
 	}
 	else
 		dest_i = ft_strlen(token->val);
-	// starts appending
 	if (dest_i + 1 >= token->val_size)
 	{
 		token->val_size = (dest_i + 1) * 2;
@@ -107,7 +115,7 @@ int	char_build(char ch, t_tokensll *token)
 	return (1);
 }
 
-int backslash_build(char *str, t_tokensll *token)
+int	backslash_build(char *str, t_tokensll *token)
 {
 	int	built_skipped;
 
@@ -121,7 +129,6 @@ int backslash_build(char *str, t_tokensll *token)
 	}
 	else
 	{
-		// ! to confirm if trailing \ throws an error or as literal?
 		built_skipped = char_build('\\', token);
 		if (built_skipped == ERR_MALLOC)
 			return (ERR_MALLOC);

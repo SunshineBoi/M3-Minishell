@@ -1,11 +1,16 @@
-#include "minishell.h"
+/* ************************************************************************** */
+/*                                                                            */
+/*                                                        :::      ::::::::   */
+/*   utils_printerr.c                                   :+:      :+:    :+:   */
+/*                                                    +:+ +:+         +:+     */
+/*   By: kong <kong@student.42singapore.sg>         +#+  +:+       +#+        */
+/*                                                +#+#+#+#+#+   +#+           */
+/*   Created: 2026/07/03 15:39:33 by kong              #+#    #+#             */
+/*   Updated: 2026/07/03 15:39:33 by kong             ###   ########.fr       */
+/*                                                                            */
+/* ************************************************************************** */
 
-void	printerr_syscall(t_errcode code)
-{
-	if (code == ERR_MALLOC || code == ERR_CMDNEXEC
-		|| code == ERR_PIPE || code == ERR_FORK)
-		perror("minishell");
-}
+#include "minishell.h"
 
 void	printerr_syntax(char *tokval)
 {
@@ -14,7 +19,7 @@ void	printerr_syntax(char *tokval)
 	ft_putstr_fd("'\n", 2);
 }
 
-void	printerr_quotes()
+void	printerr_quotes(void)
 {
 	ft_putstr_fd("minishell: Invalid quotes\n", 2);
 }
@@ -35,7 +40,6 @@ void	printerr_cmdnfound(char *cmd)
 
 void	ft_perror(char *msg)
 {
-	// minishell: {msg}: permission denied
 	ft_putstr_fd(APP": ", 2);
 	ft_putstr_fd(msg, 2);
 	ft_putstr_fd(": ", 2);
