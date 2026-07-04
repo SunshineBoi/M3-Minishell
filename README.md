@@ -278,6 +278,79 @@ resulting `t_wordlist` into the command's new argv via `push_words_to_builder`.
 the result collapses to **exactly one**, non-empty word — anything else is reported
 as an ambiguous redirect (`ERR_CMDNEXEC`), matching bash.
 
+### Envp
+
+_`src/envp/`_
+
+The environment has **two representations kept deliberately in sync, not one**:
+a linked list (`t_env`, `key`/`value`/`next`) that's the mutable source of truth
+for builtins, and a flat `char **app->envp` array rebuilt from it whenever it
+changes. Three files split the responsibility along that line:
+
+- `envp_utils.c` — list construction/destruction: `env_new_node`, `env_init`,
+  `env_free`.
+- `envp_accessor.c` — list mutation/lookup used by builtins: `env_get`, `env_set`,
+  `env_unset`.
+- `envp.c` — conversion to the flat array: `env_to_array`, `update_env_array`.
+
+**Export-only variables: `value == NULL` is a distinct state from `value ==
+""`.** `env_new_node` stores `NULL` when no value is given, which is how `export
+NAME` (no `=`) is represented internally — the variable exists for `export`'s own
+listing, but must not show up for a plain `$NAME` expansion or in a child
+process's environment. Every consumer that walks to the array checks this
+explicitly:  `env_count`/`env_to_array` (`envp.c`) skip any node whose `value` is
+`NULL`, so a valueless `export FOO` never reaches `app->envp` or `execve`.
+
+**`env_init` — skip malformed entries, abort on real failure.** Walking the
+incoming `envp[]`, a missing `=` in an entry is treated as "not a variable,
+move on" (`env_parse_entry` is simply not called, the index just advances) —
+not an error, since a shell shouldn't refuse to start over one odd entry it
+inherited. A malloc failure partway through, by contrast, unwinds everything
+built so far via `env_free(head)` and returns `NULL` — the two failure shapes
+are handled differently on purpose: one is recoverable per-entry, the other
+means memory is exhausted and there's nothing sensible left to build.
+
+**`env_set` — search first, then decide between two branches:**
+- **Found + `value` non-`NULL`** → `env_update_value` replaces `cur->value` in
+  place (old value freed, new one duplicated in).
+- **Found + `value == NULL`** → falls straight through as a no-op, the existing
+  value is left untouched. This is what makes `export FOO` on an already-set
+  `FOO=bar` safe: it must not wipe `bar` back to unset.
+- **Not found** → a new node is allocated and **prepended** to the list
+  (`node->next = *list; *list = node`), not appended — O(1) insert, at the cost
+  of new variables appearing before older ones if the list were ever iterated
+  in order-of-declaration (nothing currently depends on that order).
+
+**`env_unset` — removal is a plain linked-list splice** (`prev`/`cur` walk,
+patch whichever of `*list` or `prev->next` pointed at the removed node), and
+**returns `0` even when the key was never found** — `unset` on a non-existent
+variable is a silent success in POSIX shells, not an error.
+
+**The array is a derived, read-only snapshot — it is never mutated directly,
+only regenerated.** `update_env_array` calls `env_to_array` to build a
+complete new array first, and only frees the *old* `app->envp` after the new
+one is confirmed non-`NULL` — so a mid-rebuild malloc failure leaves the
+previous, still-valid array in place instead of leaving `app->envp` pointing at
+freed memory.
+
+**Why the array matters as much as the list.** Builtins (`env_get`/`env_set`/
+`env_unset` in `builtin_cd.c`, `builtin_export.c`, `builtin_unset.c`) only ever
+touch the linked list. But variable expansion (`env_lookup`, called from
+`handle_env_var` in the Expander) and `execve` itself both read from
+`app->envp` — the flat array — not the list. `update_env_array` is therefore
+the one synchronization point between "what builtins changed" and "what
+expansion/exec can see," and it's called from three places: once at startup
+(`main.c`, right after `env_init`), once per leading assignment inside
+`apply_assignment` (`expand_assignment.c` — this is *why* `A=1 B=$A cmd`
+resolves `B` correctly, per the Expander section above), and twice per prompt
+line in `process_prompt` (`minishell.c`) — once before `expand_ast` and once
+after `execute_ast` — to pick up whatever a builtin like `export`/`cd`/`unset`
+changed on the *previous* line before the *next* line's expansion runs.
+**Sample case:** `export FOO=bar` mutates only `app->env_list`; typing `echo
+$FOO` as a *separate* command afterward works because `process_prompt`
+resyncs `app->envp` from the list before that second line is expanded — not
+because `export` updated the array itself.
+
 ### Exec
 
 _`src/exec/`_
