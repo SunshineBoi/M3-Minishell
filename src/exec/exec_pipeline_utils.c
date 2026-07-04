@@ -1,3 +1,15 @@
+/* ************************************************************************** */
+/*                                                                            */
+/*                                                        :::      ::::::::   */
+/*   exec_pipeline_utils.c                              :+:      :+:    :+:   */
+/*                                                    +:+ +:+         +:+     */
+/*   By: lkai-yua <lkai-yua@student.42.fr>          +#+  +:+       +#+        */
+/*                                                +#+#+#+#+#+   +#+           */
+/*   Created: 2026/07/04 17:18:08 by lkai-yua          #+#    #+#             */
+/*   Updated: 2026/07/04 17:18:23 by lkai-yua         ###   ########.fr       */
+/*                                                                            */
+/* ************************************************************************** */
+
 #include "minishell.h"
 
 int	count_cmds(t_ast_node *root)
@@ -55,11 +67,6 @@ void	update_pipeops(t_pipeops *pipeops, int iter_i)
 
 void	free_pipeops(t_pipeops *pipeops, int last_pid_id)
 {
-	/*
-	previous buffer has previous process written into it
-	if nvr close the read end, the write will nvr receives EOF
-	this causes the child process itself blocked -> waitpid hangs (deadlock)
-	*/
 	if (pipeops->prevfdin != -1)
 		close(pipeops->prevfdin);
 	if (pipeops->pipebuf[0] != -1)

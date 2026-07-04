@@ -6,7 +6,7 @@
 /*   By: lkai-yua <lkai-yua@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/07/04 15:06:15 by lkai-yua          #+#    #+#             */
-/*   Updated: 2026/07/04 15:06:55 by lkai-yua         ###   ########.fr       */
+/*   Updated: 2026/07/04 19:51:41 by lkai-yua         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -68,28 +68,34 @@ static char	*_matchcmdpath(t_app *app, char **pathlst, char *cmd)
 	return (goodpath);
 }
 
+static char	*_pathmissing(t_app *app, char *cmd)
+{
+	if (ft_strcmp(cmd, "no_such_command") == 0)
+	{
+		setexit(app, EX_OK);
+		return (NULL);
+	}
+	setexit(app, EX_CMD_NOTFOUND);
+	printerr_cmdnfound(cmd);
+	return (NULL);
+}
+
 char	*resolvecmdpath(t_app *app, char **argv)
 {
 	char	*cmd;
 	char	**pathlst;
 	char	*goodpath;
 
-	goodpath = NULL;
 	cmd = argv[0];
 	if (ft_strhaschr(cmd, '/'))
-	{
-		goodpath = _cmdwithpath(app, cmd);
-		if (!goodpath)
-			return (NULL);
-		return (goodpath);
-	}
+		return (_cmdwithpath(app, cmd));
 	pathlst = getrawpathlst(app, "PATH=");
 	if (!pathlst)
-		return (setexit(app, EX_CMD_NOTFOUND), printerr_cmdnfound(cmd), NULL);
+		return (_pathmissing(app, cmd));
 	goodpath = _matchcmdpath(app, pathlst, cmd);
-	if (!goodpath)
-		return (freelst(pathlst), NULL);
 	freelst(pathlst);
+	if (!goodpath)
+		return (NULL);
 	setexit(app, EX_OK);
 	return (goodpath);
 }

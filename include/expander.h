@@ -7,12 +7,11 @@
  * @param input Raw word with quotes preserved from the lexer.
  * @param envp Environment array (KEY=VALUE).
  * @param last_status Last command exit status.
- * @param out_words Output NULL-terminated array of expanded words.
- * @param out_count Output count of words.
+ * @param out Output word list.
  * @return 0 on success, ERR_MALLOC on failure.
  */
 int	expand_word(const char *input, char **envp, int last_status,
-		char ***out_words, size_t *out_count);
+		t_wordlist *out);
 
 /**
  * @brief Expand a command argv list into a new argv list.
@@ -42,7 +41,21 @@ int	expand_redirs(t_redir *redir, char **envp, int last_status);
 int	expand_ast(t_app *app, t_ast_node *node);
 
 /* === expand_assignment.c === */
+typedef struct s_assign_ctx
+{
+	t_app	*app;
+	t_env	*tmp_env;
+	int		last_status;
+	int		count;
+	int		has_cmd;
+}	t_assign_ctx;
+
 int	process_assignments(t_app *app, t_cmd_node *cmd, int last_status);
+
+/* === expand_assignment_utils.c === */
+int	is_valid_assignment(const char *arg, char **name, char **value);
+int	assignment_prefix_count(char **argv);
+void	shift_argv_left(char **argv);
 
 /* === expand_helpers_1.c / expand_helpers_2.c === */
 int	init_ctx(t_expand_ctx *ctx, const char *input, char **envp,

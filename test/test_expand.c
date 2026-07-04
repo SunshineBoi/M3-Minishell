@@ -34,61 +34,57 @@ static void assert_words(char **words, size_t count, const char **expected)
 
 Test(expand, expands_exit_status)
 {
-	char **words;
-	size_t count;
+	t_wordlist wl;
 	char *envp[] = {"VAR=ok", NULL};
 
-	cr_assert_eq(expand_word("$?", envp, 42, &words, &count), 0);
-	cr_assert_eq(count, 1);
-	cr_assert_str_eq(words[0], "42");
-	free_words(words);
+	cr_assert_eq(expand_word("$?", envp, 42, &wl), 0);
+	cr_assert_eq(wl.count, 1);
+	cr_assert_str_eq(wl.items[0], "42");
+	free_words(wl.items);
 }
 
 Test(expand, unset_variable_is_removed_unquoted)
 {
-	char **words;
-	size_t count;
+	t_wordlist wl;
 	char *envp[] = {"VAR=ok", NULL};
 
-	cr_assert_eq(expand_word("$NOPE", envp, 0, &words, &count), 0);
-	cr_assert_eq(count, 0);
-	cr_assert_null(words[0]);
-	free_words(words);
+	cr_assert_eq(expand_word("$NOPE", envp, 0, &wl), 0);
+	cr_assert_eq(wl.count, 0);
+	cr_assert_null(wl.items[0]);
+	free_words(wl.items);
 }
 
 Test(expand, quote_rules)
 {
-	char **words;
-	size_t count;
+	t_wordlist wl;
 	char *envp[] = {"VAR=hi", NULL};
 
-	cr_assert_eq(expand_word("\"$VAR\"", envp, 0, &words, &count), 0);
-	cr_assert_eq(count, 1);
-	cr_assert_str_eq(words[0], "hi");
-	free_words(words);
+	cr_assert_eq(expand_word("\"$VAR\"", envp, 0, &wl), 0);
+	cr_assert_eq(wl.count, 1);
+	cr_assert_str_eq(wl.items[0], "hi");
+	free_words(wl.items);
 
-	cr_assert_eq(expand_word("'$VAR'", envp, 0, &words, &count), 0);
-	cr_assert_eq(count, 1);
-	cr_assert_str_eq(words[0], "$VAR");
-	free_words(words);
+	cr_assert_eq(expand_word("'$VAR'", envp, 0, &wl), 0);
+	cr_assert_eq(wl.count, 1);
+	cr_assert_str_eq(wl.items[0], "$VAR");
+	free_words(wl.items);
 }
 
 Test(expand, field_splitting)
 {
-	char **words;
-	size_t count;
+	t_wordlist wl;
 	const char *expected[] = {"a", "b", "c"};
 	char *envp[] = {"VAR=a b c", NULL};
 
-	cr_assert_eq(expand_word("$VAR", envp, 0, &words, &count), 0);
-	cr_assert_eq(count, 3);
-	assert_words(words, 3, expected);
-	free_words(words);
+	cr_assert_eq(expand_word("$VAR", envp, 0, &wl), 0);
+	cr_assert_eq(wl.count, 3);
+	assert_words(wl.items, 3, expected);
+	free_words(wl.items);
 
-	cr_assert_eq(expand_word("\"$VAR\"", envp, 0, &words, &count), 0);
-	cr_assert_eq(count, 1);
-	cr_assert_str_eq(words[0], "a b c");
-	free_words(words);
+	cr_assert_eq(expand_word("\"$VAR\"", envp, 0, &wl), 0);
+	cr_assert_eq(wl.count, 1);
+	cr_assert_str_eq(wl.items[0], "a b c");
+	free_words(wl.items);
 }
 
 Test(expand, argv_expansion)
@@ -144,83 +140,78 @@ Test(expand, redirection_ambiguous_error)
 
 Test(expand, literal_dollar_and_positional_are_handled)
 {
-	char **words;
-	size_t count;
+	t_wordlist wl;
 	char *envp[] = {"VAR=ok", NULL};
 
-	cr_assert_eq(expand_word("$-", envp, 0, &words, &count), 0);
-	cr_assert_eq(count, 1);
-	cr_assert_str_eq(words[0], "$-");
-	free_words(words);
+	cr_assert_eq(expand_word("$-", envp, 0, &wl), 0);
+	cr_assert_eq(wl.count, 1);
+	cr_assert_str_eq(wl.items[0], "$-");
+	free_words(wl.items);
 
-	cr_assert_eq(expand_word("$1", envp, 0, &words, &count), 0);
-	cr_assert_eq(count, 0);
-	cr_assert_null(words[0]);
-	free_words(words);
+	cr_assert_eq(expand_word("$1", envp, 0, &wl), 0);
+	cr_assert_eq(wl.count, 0);
+	cr_assert_null(wl.items[0]);
+	free_words(wl.items);
 }
 
 Test(expand, double_quote_backslash_rules)
 {
-	char **words;
-	size_t count;
+	t_wordlist wl;
 	char *envp[] = {"VAR=ok", NULL};
 
-	cr_assert_eq(expand_word("\"a\\\"b\"", envp, 0, &words, &count), 0);
-	cr_assert_eq(count, 1);
-	cr_assert_str_eq(words[0], "a\"b");
-	free_words(words);
+	cr_assert_eq(expand_word("\"a\\\"b\"", envp, 0, &wl), 0);
+	cr_assert_eq(wl.count, 1);
+	cr_assert_str_eq(wl.items[0], "a\"b");
+	free_words(wl.items);
 
-	cr_assert_eq(expand_word("\"\\$VAR\"", envp, 0, &words, &count), 0);
-	cr_assert_eq(count, 1);
-	cr_assert_str_eq(words[0], "$VAR");
-	free_words(words);
+	cr_assert_eq(expand_word("\"\\$VAR\"", envp, 0, &wl), 0);
+	cr_assert_eq(wl.count, 1);
+	cr_assert_str_eq(wl.items[0], "$VAR");
+	free_words(wl.items);
 }
 
 Test(expand, quoted_and_unquoted_segments_join_one_word)
 {
-	char **words;
-	size_t count;
+	t_wordlist wl;
 	char *envp[] = {"USER=marvin", "EMPTY=", NULL};
 
 	cr_assert_eq(expand_word("pre\"$USER\"'!'post", envp, 0,
-			&words, &count), 0);
-	cr_assert_eq(count, 1);
-	cr_assert_str_eq(words[0], "premarvin!post");
-	free_words(words);
+			&wl), 0);
+	cr_assert_eq(wl.count, 1);
+	cr_assert_str_eq(wl.items[0], "premarvin!post");
+	free_words(wl.items);
 
 	cr_assert_eq(expand_word("a\"\"b''c$EMPTY", envp, 0,
-			&words, &count), 0);
-	cr_assert_eq(count, 1);
-	cr_assert_str_eq(words[0], "abc");
-	free_words(words);
+			&wl), 0);
+	cr_assert_eq(wl.count, 1);
+	cr_assert_str_eq(wl.items[0], "abc");
+	free_words(wl.items);
 }
 
 Test(expand, variable_name_boundaries)
 {
-	char **words;
-	size_t count;
+	t_wordlist wl;
 	char *envp[] = {"A=one", "A1=two", "_X=under", NULL};
 
-	cr_assert_eq(expand_word("$A1:$A-$_X", envp, 0, &words, &count), 0);
-	cr_assert_eq(count, 1);
-	cr_assert_str_eq(words[0], "two:one-under");
-	free_words(words);
+	cr_assert_eq(expand_word("$A1:$A-$_X", envp, 0, &wl), 0);
+	cr_assert_eq(wl.count, 1);
+	cr_assert_str_eq(wl.items[0], "two:one-under");
+	free_words(wl.items);
 
-	cr_assert_eq(expand_word("${A}", envp, 0, &words, &count), 0);
-	cr_assert_eq(count, 1);
-	cr_assert_str_eq(words[0], "${A}");
-	free_words(words);
+	cr_assert_eq(expand_word("${A}", envp, 0, &wl), 0);
+	cr_assert_eq(wl.count, 1);
+	cr_assert_str_eq(wl.items[0], "${A}");
+	free_words(wl.items);
 }
 
 Test(expand, unquoted_empty_middle_variable_does_not_split_word)
 {
-	char **words;
-	size_t count;
+	t_wordlist wl;
 	char *envp[] = {"EMPTY=", "WORD=mid", NULL};
 
 	cr_assert_eq(expand_word("pre$EMPTY$WORD-post", envp, 0,
-			&words, &count), 0);
-	cr_assert_eq(count, 1);
-	cr_assert_str_eq(words[0], "premid-post");
-	free_words(words);
+			&wl), 0);
+	cr_assert_eq(wl.count, 1);
+	cr_assert_str_eq(wl.items[0], "premid-post");
+	free_words(wl.items);
 }
