@@ -107,7 +107,10 @@ int	start_pipeline(t_app *app, t_pipeops *pipeops, t_cmd_node **cmds)
 				close(pipeops->pipebuf[0]);
 			do_childproc(app, cmds[i], pipeops->prevfdin, pipeops->fdout);
 			exitcode = app->exitcode;
-			return (free(cmds), free(pipeops), exit(exitcode), -1);
+			free(cmds);
+			free(pipeops);
+			cleanup_app(app);
+			exit(exitcode);
 		}
 		update_pipeops(pipeops, i);
 		i++;

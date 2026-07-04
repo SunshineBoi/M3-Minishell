@@ -72,10 +72,12 @@ static char	*get_next_line_non_interactive(void)
 int	read_heredoc_loop(t_app *app, int fd, const char *delim, int is_quoted)
 {
 	char	*line;
+	int		interactive;
 
+	interactive = isatty(STDIN_FILENO);
 	while (1)
 	{
-		if (isatty(STDIN_FILENO))
+		if (interactive)
 		{
 			write(1, "> ", 2);
 			line = get_next_line_non_interactive();
@@ -88,6 +90,8 @@ int	read_heredoc_loop(t_app *app, int fd, const char *delim, int is_quoted)
 		{
 			ft_putstr_fd("minishell: warning: here-document ", 2);
 			ft_putstr_fd("delimited by end-of-file\n", 2);
+			if (interactive)
+				clearerr(stdin);
 			return (0);
 		}
 		if (ft_strcmp(line, delim) == 0)

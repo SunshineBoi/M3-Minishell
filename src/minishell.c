@@ -27,11 +27,20 @@ void	process_prompt(t_app *app, char *str)
 	if (!app->ast)
 		return ;
 	if (update_env_array(app) != 0)
-		return (setexit(app, EX_ERR), ast_free(app->ast));
+	{
+		setexit(app, EX_ERR);
+		ast_free(app->ast);
+		app->ast = NULL;
+		return ;
+	}
 	if (expand_ast(app, app->ast) != 0)
-		return (ast_free(app->ast));
+	{
+		ast_free(app->ast);
+		app->ast = NULL;
+		return ;
+	}
 	execute_ast(app, app->ast);
-	if (update_env_array(app) != 0)
+	if (!app->should_exit && update_env_array(app) != 0)
 		setexit(app, EX_ERR);
 	ast_free(app->ast);
 	app->ast = NULL;
@@ -69,14 +78,23 @@ static char	*read_prompt(void)
 	return (prompt);
 }
 
-static int	cleanup_app(t_app *app)
+int	cleanup_app(t_app *app)
 {
 	int	exit_code;
 
+	if (!app)
+		return (EX_ERR);
 	exit_code = app->exitcode;
+	if (app->tokensll)
+		freetokensll(app->tokensll);
+	if (app->ast)
+		ast_free(app->ast);
+	if (app->prompt)
+		free(app->prompt);
 	env_free(app->env_list);
 	if (app->envp)
 		freelst(app->envp);
+	clear_history();
 	free(app);
 	return (exit_code);
 }
@@ -100,10 +118,14 @@ int	minishell(char **envp)
 		}
 		if (g_signal == SIGINT)
 			handle_sigint_in_main(app);
-		if (*prompt)
-			add_history(prompt);
+		app->prompt = prompt;
 		process_prompt(app, prompt);
+		if (*prompt && !app->should_exit && isatty(STDIN_FILENO))
+			add_history(prompt);
 		free(prompt);
+		app->prompt = NULL;
+		if (app->should_exit)
+			break ;
 	}
 	return (cleanup_app(app));
 }

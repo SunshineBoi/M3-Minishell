@@ -62,9 +62,11 @@ typedef struct s_app
 {
 	t_tokensll	*tokensll;
 	t_ast_node	*ast;
+	char		*prompt;
 	t_env		*env_list;
 	char		**envp;
 	int			exitcode;
+	int			should_exit;
 }	t_app;
 
 int		update_env_array(t_app *app);
@@ -212,5 +214,6 @@ t_app	*init_app(char **envp);
 /* === minishell.c === */
 int		minishell(char **envp);
 void	process_prompt(t_app *app, char *str);
+int		cleanup_app(t_app *app);
 
 #endif

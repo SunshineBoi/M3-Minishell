@@ -22,8 +22,10 @@ t_app	*init_app(char **envp)
 	app->env_list = env_init(envp);
 	app->envp = env_to_array(app->env_list);
 	app->exitcode = EX_OK;
+	app->should_exit = 0;
 	app->tokensll = NULL;
 	app->ast = NULL;
+	app->prompt = NULL;
 	return (app);
 }
 

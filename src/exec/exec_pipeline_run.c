@@ -69,14 +69,15 @@ int	do_exec(t_app *app, t_cmd_node *cmdnode)
 	int		status;
 
 	if (!cmdnode->argv)
-		return (exit(EX_OK), -1);
+		return (setexit(app, EX_OK), -1);
 	saved_envp = app->envp;
 	if (cmdnode->envp)
 		app->envp = cmdnode->envp;
 	if (is_builtin(cmdnode->argv[0]))
 	{
 		status = exec_builtin(cmdnode->argv, app);
-		return (setexit(app, status), exit(app->exitcode), -1);
+		app->envp = saved_envp;
+		return (setexit(app, status), -1);
 	}
 	cmdpath = resolvecmdpath(app, cmdnode->argv);
 	if (!cmdpath)
