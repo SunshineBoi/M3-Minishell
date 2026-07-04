@@ -151,6 +151,7 @@ expect_stdout 'env prints assigned variables' 'export A=ok
 env | grep "^A="' 'A=ok'
 expect_status 'exit numeric status wraps to 0-255' 'exit 257' 1
 expect_status 'exit non-numeric status is error' 'exit abc' 2
+expect_status 'exit non-numeric wins over extra args' 'exit abc 1' 2
 
 # Stage 6: redirection execution
 expect_file 'output redirection creates and truncates' 'echo hello > out' out 'hello'
