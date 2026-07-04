@@ -19,19 +19,14 @@
  */
 int	builtin_env(t_app *app)
 {
-	t_env	*cur;
+	int	i;
 
-	cur = app->env_list;
-	while (cur)
+	i = 0;
+	while (app->envp && app->envp[i])
 	{
-		if (cur->value)
-		{
-			ft_putstr_fd(cur->key, 1);
-			write(1, "=", 1);
-			ft_putstr_fd(cur->value, 1);
-			write(1, "\n", 1);
-		}
-		cur = cur->next;
+		ft_putstr_fd(app->envp[i], 1);
+		write(1, "\n", 1);
+		i++;
 	}
 	return (EX_OK);
 }

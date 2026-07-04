@@ -5,6 +5,7 @@ int	exec_builtinproc(t_app *app, t_cmd_node *cmdnode)
 	int		temp_in;
 	int		temp_out;
 	int		status;
+	char	**saved_envp;
 
 	// builtin runs in parent — needed for cd, export, exit, unset
 	temp_in = -1;
@@ -21,7 +22,11 @@ int	exec_builtinproc(t_app *app, t_cmd_node *cmdnode)
 			return (restore_fd(temp_in, temp_out), close_redirsfd(cmdnode), -1);
 		close_redirsfd(cmdnode);
 	}
+	saved_envp = app->envp;
+	if (cmdnode->envp)
+		app->envp = cmdnode->envp;
 	status = exec_builtin(cmdnode->argv, app);
+	app->envp = saved_envp;
 	restore_fd(temp_in, temp_out);
 	setexit(app, status);
 	return (status);

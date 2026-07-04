@@ -40,23 +40,75 @@ static int	is_valid_assignment(const char *arg, char **name, char **value)
 	return (*value != NULL || (free(*name), 0));
 }
 
-static int	apply_assignment(t_app *app, char *name, char *raw, int last_status)
+static int	is_assignment_word(const char *arg)
 {
-	char		*val;
+	int	i;
+
+	i = 0;
+	if (!arg || !is_name_start(arg[0]))
+		return (0);
+	while (arg[i] && arg[i] != '=')
+	{
+		if (arg[i] != '_' && (arg[i] < 'A' || arg[i] > 'Z')
+			&& (arg[i] < 'a' || arg[i] > 'z') && (arg[i] < '0' || arg[i] > '9'))
+			return (0);
+		i++;
+	}
+	return (arg[i] == '=');
+}
+
+static int	assignment_prefix_count(char **argv)
+{
+	int	count;
+
+	count = 0;
+	while (argv && argv[count] && is_assignment_word(argv[count]))
+		count++;
+	return (count);
+}
+
+static void	shift_argv_left(char **argv)
+{
+	int	j;
+
+	j = 0;
+	while (argv[j])
+	{
+		argv[j] = argv[j + 1];
+		j++;
+	}
+}
+
+static int	expand_assignment_value(t_app *app, char *raw, int last_status,
+		char **out)
+{
 	t_wordlist	wl;
 
-	if (expand_word(raw, app->envp, last_status, &wl) == 0)
+	*out = NULL;
+	if (expand_word(raw, app->envp, last_status, &wl.items, &wl.count) == 0)
 	{
 		if (wl.count > 0 && wl.items[0])
-			val = ft_strdup(wl.items[0]);
+			*out = ft_strdup(wl.items[0]);
 		else
-			val = ft_strdup("");
+			*out = ft_strdup("");
 		freelst(wl.items);
 	}
 	else
-		val = ft_strdup("");
+		*out = ft_strdup("");
 	free(raw);
-	if (env_set(&app->env_list, name, val) != 0)
+	if (!*out)
+		return (ERR_MALLOC);
+	return (0);
+}
+
+static int	apply_assignment(t_app *app, t_env **env, char *name, char *raw,
+		int last_status)
+{
+	char	*val;
+
+	if (expand_assignment_value(app, raw, last_status, &val) != 0)
+		return (free(name), ERR_MALLOC);
+	if (env_set(env, name, val) != 0)
 	{
 		free(name);
 		free(val);
@@ -64,28 +116,45 @@ static int	apply_assignment(t_app *app, char *name, char *raw, int last_status)
 	}
 	free(name);
 	free(val);
-	return (update_env_array(app));
+	return (0);
 }
 
 int	process_assignments(t_app *app, t_cmd_node *cmd, int last_status)
 {
 	char	*name;
 	char	*raw_val;
-	int		j;
+	t_env	*tmp_env;
+	int		count;
+	int		has_cmd;
+	int		i;
 
-	while (cmd->argv && cmd->argv[0])
+	count = assignment_prefix_count(cmd->argv);
+	if (count == 0)
+		return (0);
+	has_cmd = (cmd->argv[count] != NULL);
+	tmp_env = NULL;
+	if (has_cmd)
+		tmp_env = env_init(app->envp);
+	i = 0;
+	while (i < count)
 	{
 		if (!is_valid_assignment(cmd->argv[0], &name, &raw_val))
 			break ;
-		if (apply_assignment(app, name, raw_val, last_status) != 0)
+		if (has_cmd && apply_assignment(app, &tmp_env, name, raw_val,
+				last_status) != 0)
+			return (env_free(tmp_env), ERR_MALLOC);
+		if (!has_cmd && apply_assignment(app, &app->env_list, name, raw_val,
+				last_status) != 0)
 			return (ERR_MALLOC);
 		free(cmd->argv[0]);
-		j = 0;
-		while (cmd->argv[j])
-		{
-			cmd->argv[j] = cmd->argv[j + 1];
-			j++;
-		}
+		shift_argv_left(cmd->argv);
+		i++;
 	}
+	if (!has_cmd)
+		return (update_env_array(app));
+	cmd->envp = env_to_array(tmp_env);
+	env_free(tmp_env);
+	if (!cmd->envp)
+		return (ERR_MALLOC);
 	return (0);
 }
