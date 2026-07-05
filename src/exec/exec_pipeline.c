@@ -63,34 +63,24 @@ int	setup_pipe(t_app *app, t_pipeops *pipeops, int iter_i)
 	return (0);
 }
 
-// after fork, called inside child
-int	do_childproc(t_app *app, t_cmd_node *cmdnode, int fdin, int fdout)
+static void	exit_pipeline_child(t_app *app, t_pipeops *pipeops,
+	t_cmd_node **cmds, int i)
 {
-	signals_default();
-	if (fdin != -1)
-	{
-		dup2(fdin, STDIN_FILENO);
-		close(fdin);
-	}
-	if (fdout != -1)
-	{
-		dup2(fdout, STDOUT_FILENO);
-		close(fdout);
-	}
-	if (open_redirs(app, cmdnode) == -1)
-		return (close_redirsfd(cmdnode), -1);
-	if (do_dup2redirs(app, cmdnode) == -1)
-		return (close_redirsfd(cmdnode), -1);
-	close_redirsfd(cmdnode);
-	if (do_exec(app, cmdnode) == -1)
-		return (-1);
-	return (0);
+	int	exitcode;
+
+	if (pipeops->pipebuf[0] != -1)
+		close(pipeops->pipebuf[0]);
+	do_childproc(app, cmds[i], pipeops->prevfdin, pipeops->fdout);
+	exitcode = app->exitcode;
+	free(cmds);
+	free(pipeops);
+	cleanup_app(app);
+	exit(exitcode);
 }
 
 int	start_pipeline(t_app *app, t_pipeops *pipeops, t_cmd_node **cmds)
 {
 	int	i;
-	int	exitcode;
 
 	i = 0;
 	while (i < pipeops->n_cmd)
@@ -102,16 +92,7 @@ int	start_pipeline(t_app *app, t_pipeops *pipeops, t_cmd_node **cmds)
 			return (free_pipeops(pipeops, i - 1),
 				setexit(app, EX_ERR), perror(APP), -1);
 		if (pipeops->pids[i] == 0)
-		{
-			if (pipeops->pipebuf[0] != -1)
-				close(pipeops->pipebuf[0]);
-			do_childproc(app, cmds[i], pipeops->prevfdin, pipeops->fdout);
-			exitcode = app->exitcode;
-			free(cmds);
-			free(pipeops);
-			cleanup_app(app);
-			exit(exitcode);
-		}
+			exit_pipeline_child(app, pipeops, cmds, i);
 		update_pipeops(pipeops, i);
 		i++;
 	}
