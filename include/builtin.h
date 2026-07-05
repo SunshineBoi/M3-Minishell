@@ -1,5 +1,19 @@
+/* ************************************************************************** */
+/*                                                                            */
+/*                                                        :::      ::::::::   */
+/*   builtin.h                                          :+:      :+:    :+:   */
+/*                                                    +:+ +:+         +:+     */
+/*   By: lkai-yua <lkai-yua@student.42.fr>          +#+  +:+       +#+        */
+/*                                                +#+#+#+#+#+   +#+           */
+/*   Created: 2026/07/05 18:53:49 by lkai-yua          #+#    #+#             */
+/*   Updated: 2026/07/05 18:53:51 by lkai-yua         ###   ########.fr       */
+/*                                                                            */
+/* ************************************************************************** */
+
 #ifndef BUILTIN_H
 # define BUILTIN_H
+
+typedef struct s_app	t_app;
 
 int	is_builtin(const char *cmd);
 int	exec_builtin(char **argv, t_app *app);

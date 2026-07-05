@@ -1,0 +1,54 @@
+{
+   readline_reachable_malloc
+   Memcheck:Leak
+   match-leak-kinds: reachable
+   fun:malloc
+   ...
+   obj:*libreadline.so*
+   ...
+   fun:readline
+}
+
+{
+   readline_reachable_calloc
+   Memcheck:Leak
+   match-leak-kinds: reachable
+   fun:calloc
+   ...
+   obj:*libreadline.so*
+   ...
+   fun:readline
+}
+
+{
+   readline_reachable_realloc
+   Memcheck:Leak
+   match-leak-kinds: reachable
+   fun:realloc
+   ...
+   obj:*libreadline.so*
+   ...
+   fun:readline
+}
+
+{
+   tinfo_reachable_malloc
+   Memcheck:Leak
+   match-leak-kinds: reachable
+   fun:malloc
+   ...
+   obj:*libtinfo.so*
+   ...
+   fun:readline
+}
+
+{
+   tinfo_reachable_calloc
+   Memcheck:Leak
+   match-leak-kinds: reachable
+   fun:calloc
+   ...
+   obj:*libtinfo.so*
+   ...
+   fun:readline
+}

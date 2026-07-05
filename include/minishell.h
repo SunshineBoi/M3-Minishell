@@ -6,7 +6,7 @@
 /*   By: lkai-yua <lkai-yua@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/07/04 21:28:05 by lkai-yua          #+#    #+#             */
-/*   Updated: 2026/07/04 21:28:50 by lkai-yua         ###   ########.fr       */
+/*   Updated: 2026/07/05 18:59:47 by lkai-yua         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -24,18 +24,18 @@
 # include <sys/types.h>
 # include <sys/wait.h>
 # include <unistd.h>
+# include "ast.h"
+# include "builtin.h"
+# include "envp.h"
+# include "exec.h"
+# include "expander.h"
+# include "lexer.h"
+# include "parser.h"
 
 # define BUFFER_SIZE 4096
 # define APP "minishell"
 
 extern volatile sig_atomic_t	g_signal;
-
-typedef enum e_qstate
-{
-	Q_NONE,
-	Q_SQUOTE,
-	Q_DQUOTE
-}								t_qstate;
 
 typedef enum e_errcode
 {
@@ -58,17 +58,13 @@ typedef enum e_errcode
  */
 typedef enum e_exitcode
 {
-	EX_OK = 0, /**< Program executed successfully. */
-	EX_ERR = 1, /**< General catchall for minor/generic errors. */
+	EX_OK = 0,
+	EX_ERR = 1,
 	EX_SYNTAX = 2,
-	EX_CMD_NEXEC = 126, /**< Command invoked but is not executable. */
-	EX_CMD_NOTFOUND = 127, /**< Command cannot be found in PATH. */
-	EX_SIG_BASE = 128 /**< Base offset for fatal signal terminations. */
+	EX_CMD_NEXEC = 126,
+	EX_CMD_NOTFOUND = 127,
+	EX_SIG_BASE = 128
 }								t_exitcode;
-
-# include "ast.h"
-# include "parser.h"
-# include "envp.h"
 
 typedef struct s_app
 {
@@ -82,11 +78,6 @@ typedef struct s_app
 }								t_app;
 
 int								update_env_array(t_app *app);
-
-# include "lexer.h"
-# include "expander.h"
-# include "exec.h"
-# include "builtin.h"
 
 /* === utils_exit.c === */
 /**
