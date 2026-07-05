@@ -12,40 +12,6 @@
 
 #include "minishell.h"
 
-void	process_prompt(t_app *app, char *str)
-{
-	app->tokensll = build_tokensll(app, str);
-	if (validate_tokensll(app) == -1)
-	{
-		freetokensll(app->tokensll);
-		app->tokensll = NULL;
-		return ;
-	}
-	app->ast = parse_tokens(app->tokensll);
-	freetokensll(app->tokensll);
-	app->tokensll = NULL;
-	if (!app->ast)
-		return ;
-	if (update_env_array(app) != 0)
-	{
-		setexit(app, EX_ERR);
-		ast_free(app->ast);
-		app->ast = NULL;
-		return ;
-	}
-	if (expand_ast(app, app->ast) != 0)
-	{
-		ast_free(app->ast);
-		app->ast = NULL;
-		return ;
-	}
-	execute_ast(app, app->ast);
-	if (!app->should_exit && update_env_array(app) != 0)
-		setexit(app, EX_ERR);
-	ast_free(app->ast);
-	app->ast = NULL;
-}
-
 static char	*get_next_line_non_interactive(void)
 {
 	char	*line;
@@ -99,32 +65,40 @@ int	cleanup_app(t_app *app)
 	return (exit_code);
 }
 
+static int	run_prompt_cycle(t_app *app)
+{
+	char	*prompt;
+
+	prompt = read_prompt();
+	if (!prompt)
+	{
+		if (isatty(STDIN_FILENO))
+			ft_putstr_fd("exit\n", 1);
+		return (0);
+	}
+	if (g_signal == SIGINT)
+		handle_sigint_in_main(app);
+	app->prompt = prompt;
+	process_prompt(app, prompt);
+	if (*prompt && !app->should_exit && isatty(STDIN_FILENO))
+		add_history(prompt);
+	free(prompt);
+	app->prompt = NULL;
+	if (app->should_exit)
+		return (0);
+	return (1);
+}
+
 int	minishell(char **envp)
 {
 	t_app	*app;
-	char	*prompt;
 
 	app = init_app(envp);
 	if (!app)
 		hardexit();
 	while (1)
 	{
-		prompt = read_prompt();
-		if (!prompt)
-		{
-			if (isatty(STDIN_FILENO))
-				ft_putstr_fd("exit\n", 1);
-			break ;
-		}
-		if (g_signal == SIGINT)
-			handle_sigint_in_main(app);
-		app->prompt = prompt;
-		process_prompt(app, prompt);
-		if (*prompt && !app->should_exit && isatty(STDIN_FILENO))
-			add_history(prompt);
-		free(prompt);
-		app->prompt = NULL;
-		if (app->should_exit)
+		if (!run_prompt_cycle(app))
 			break ;
 	}
 	return (cleanup_app(app));
