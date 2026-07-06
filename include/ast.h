@@ -51,8 +51,6 @@ typedef struct s_redir
 	struct s_redir			*next;
 }							t_redir;
 
-typedef struct s_ast_node	t_ast_node;
-
 typedef struct s_cmd_node
 {
 	char					**argv;
@@ -60,25 +58,23 @@ typedef struct s_cmd_node
 	t_redir					*redirs;
 }							t_cmd_node;
 
-typedef struct s_binop_node
-{
-	t_binop_type			op;
-	t_ast_node				*left;
-	t_ast_node				*right;
-}							t_binop_node;
-
-typedef union u_ast_content
-{
-	t_cmd_node				cmd;
-	t_binop_node			binop;
-}							t_ast_content;
-
-struct						s_ast_node
+typedef struct s_ast_node
 {
 	t_node_type				type;
 	t_span					span;
-	t_ast_content			content;
-};
+	union
+	{
+		t_cmd_node			cmd;
+		struct
+		{
+			t_binop_type	op;
+			struct s_ast_node
+							*left;
+			struct s_ast_node
+							*right;
+		}					binop;
+	}						content;
+}							t_ast_node;
 
 t_ast_node					*ast_new_cmd(char **argv, t_redir *redirs,
 								t_span span);
