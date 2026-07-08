@@ -12,15 +12,34 @@
 
 #include "minishell.h"
 
+static int	max_redir_fd(t_redir *redirs)
+{
+	int	max;
+
+	max = 2;
+	while (redirs)
+	{
+		if (redirs->src_fd > max)
+			max = redirs->src_fd;
+		redirs = redirs->next;
+	}
+	return (max);
+}
+
 static int	setup_builtin_redirs(t_app *app, t_cmd_node *cmdnode,
 	int *temp_in, int *temp_out)
 {
+	int	floor;
+
 	if (!cmdnode->redirs)
 		return (0);
-	*temp_in = dup(STDIN_FILENO);
-	*temp_out = dup(STDOUT_FILENO);
-	if (*temp_in == -1 || *temp_out == -1)
-		return (restore_fd(*temp_in, *temp_out), -1);
+	floor = max_redir_fd(cmdnode->redirs);
+	*temp_in = floor + 1;
+	*temp_out = floor + 2;
+	if (dup2(STDIN_FILENO, *temp_in) == -1
+		|| dup2(STDOUT_FILENO, *temp_out) == -1)
+		return (setexit(app, EX_ERR), perror(APP),
+			restore_fd(*temp_in, *temp_out), -1);
 	if (open_redirs(app, cmdnode) == -1)
 		return (restore_fd(*temp_in, *temp_out),
 			close_redirsfd(cmdnode), -1);

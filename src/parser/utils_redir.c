@@ -6,13 +6,19 @@
 /*   By: kong <kong@student.42singapore.sg>         +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/07/03 17:21:02 by kong              #+#    #+#             */
-/*   Updated: 2026/07/03 17:21:03 by kong             ###   ########.fr       */
+/*   Updated: 2026/07/08 14:00:17 by kong             ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "minishell.h"
 
-t_redir	*redir_new(t_redir_type type, const char *target)
+int	is_redir_token(t_token_type type)
+{
+	return (type == TOK_DIRIN || type == TOK_DIROUT
+		|| type == TOK_DIRAPPND || type == TOK_HEREDOC);
+}
+
+t_redir	*redir_new(t_redir_type type, const char *target, int src_fd)
 {
 	t_redir	*redir;
 
@@ -27,6 +33,12 @@ t_redir	*redir_new(t_redir_type type, const char *target)
 		return (NULL);
 	}
 	redir->fd = -1;
+	if (src_fd != -1)
+		redir->src_fd = src_fd;
+	else if (type == REDIR_IN || type == REDIR_HEREDOC)
+		redir->src_fd = STDIN_FILENO;
+	else
+		redir->src_fd = STDOUT_FILENO;
 	redir->next = NULL;
 	return (redir);
 }
