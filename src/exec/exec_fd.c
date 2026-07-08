@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   exec_fd.c                                          :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: lkai-yua <lkai-yua@student.42.fr>          +#+  +:+       +#+        */
+/*   By: kong <kong@student.42singapore.sg>         +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/07/04 19:54:14 by lkai-yua          #+#    #+#             */
-/*   Updated: 2026/07/04 20:05:24 by lkai-yua         ###   ########.fr       */
+/*   Updated: 2026/07/08 14:23:42 by kong             ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -51,12 +51,12 @@ int	do_dup2redirs(t_app *app, t_cmd_node *node)
 		{
 			if (redir->type == REDIR_IN || redir->type == REDIR_HEREDOC)
 			{
-				if (dup2(redir->fd, STDIN_FILENO) == -1)
+				if (dup2(redir->fd, redir->src_fd) == -1)
 					return (setexit(app, EX_ERR), perror(APP), -1);
 			}
 			else if (redir->type == REDIR_APPEND || redir->type == REDIR_OUT)
 			{
-				if (dup2(redir->fd, STDOUT_FILENO) == -1)
+				if (dup2(redir->fd, redir->src_fd) == -1)
 					return (setexit(app, EX_ERR), perror(APP), -1);
 			}
 		}

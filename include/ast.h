@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   ast.h                                              :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: lkai-yua <lkai-yua@student.42.fr>          +#+  +:+       +#+        */
+/*   By: kong <kong@student.42singapore.sg>         +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/07/05 18:56:09 by lkai-yua          #+#    #+#             */
-/*   Updated: 2026/07/05 18:56:10 by lkai-yua         ###   ########.fr       */
+/*   Updated: 2026/07/08 12:52:03 by kong             ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -48,6 +48,7 @@ typedef struct s_redir
 	t_redir_type				type;
 	char						*target;
 	int							fd;
+	int							src_fd;
 	struct s_redir				*next;
 }								t_redir;
 

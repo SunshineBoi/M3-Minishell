@@ -12,6 +12,11 @@
 
 #include "minishell.h"
 
+static int	ft_isdigit(int ch)
+{
+	return (ch >= '0' && ch <= '9');
+}
+
 /**
  * @brief Build a string token by consuming a word segment.
  * @param token Token node to populate.
@@ -22,11 +27,14 @@ int	string_build(t_tokensll *token, char *str)
 {
 	int	len;
 	int	built_skipped;
+	int	flag_is_number;
 
 	len = 0;
+	flag_is_number = 1;
 	while (str[len] && !iswhitespace(str[len]) && !isspecialsym(str[len]))
 	{
 		built_skipped = 0;
+		flag_is_number = flag_is_number && ft_isdigit(str[len]);
 		if (str[len] == '\\')
 			built_skipped = backslash_build(str + len + 1, token);
 		else if (str[len] == '\'' || str[len] == '"')
@@ -39,6 +47,8 @@ int	string_build(t_tokensll *token, char *str)
 			return (ERR_MALLOC);
 		len += built_skipped;
 	}
+	if (len > 0 && flag_is_number == 1 && (str[len] == '>' || str[len] == '<'))
+		token->type = TOK_IONUM;
 	return (len);
 }
 

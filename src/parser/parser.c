@@ -6,7 +6,7 @@
 /*   By: kong <kong@student.42singapore.sg>         +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/07/03 15:55:32 by kong              #+#    #+#             */
-/*   Updated: 2026/07/03 15:55:33 by kong             ###   ########.fr       */
+/*   Updated: 2026/07/08 14:21:59 by kong             ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -38,14 +38,10 @@ static t_ast_node	*parse_simple_command(t_parser *p)
 		return (NULL);
 	redirs = NULL;
 	start = p->index;
-	while (p->cur && (p->cur->type == TOK_STR || is_redir_token(p->cur->type)))
-	{
-		if (p->cur->type == TOK_STR && parse_word(p, &ab) == 0)
-			continue ;
-		if (is_redir_token(p->cur->type) && parse_redir(p, &redirs) == 0)
-			continue ;
-		return (free_ab_redirs(&ab, redirs), NULL);
-	}
+	while (p->cur && (p->cur->type == TOK_STR || p->cur->type == TOK_IONUM
+			|| is_redir_token(p->cur->type)))
+		if (parse_command_token(p, &ab, &redirs) == -1)
+			return (free_ab_redirs(&ab, redirs), NULL);
 	if (ab.count == 0 && !redirs)
 		return (free_ab_redirs(&ab, redirs), NULL);
 	node = ast_new_cmd(ab.argv, redirs, (t_span){start, p->index});

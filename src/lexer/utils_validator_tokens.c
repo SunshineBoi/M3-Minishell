@@ -51,7 +51,7 @@ int	is_valid_redir(t_tokensll *tokens)
 		return (printerr_syntax("newline"), 0);
 	else if (ispipe(tokens->next->type))
 		return (printerr_syntax(tokens->next->val), 0);
-	else if (isredir(tokens->next->type))
+	else if (isredir(tokens->next->type) || tokens->next->type == TOK_IONUM)
 		return (printerr_syntax(tokens->next->val), 0);
 	return (1);
 }

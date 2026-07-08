@@ -188,6 +188,9 @@ char							*read_line_fd(int fd);
  */
 int								ft_strhaschr(char *str, char ch);
 
+/* === utils_str_3.c === */
+int								ft_atoi(char *str);
+
 /* === utils_validator.c === */
 /**
  * @brief Check if a character is considered whitespace.

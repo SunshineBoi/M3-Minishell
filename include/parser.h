@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   parser.h                                           :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: lkai-yua <lkai-yua@student.42.fr>          +#+  +:+       +#+        */
+/*   By: kong <kong@student.42singapore.sg>         +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/07/05 18:54:43 by lkai-yua          #+#    #+#             */
-/*   Updated: 2026/07/05 18:54:43 by lkai-yua         ###   ########.fr       */
+/*   Updated: 2026/07/08 13:40:46 by kong             ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -25,6 +25,7 @@ typedef enum e_token_type
 	TOK_DIRAPPND,
 	TOK_HEREDOC,
 	TOK_EOF,
+	TOK_IONUM
 }						t_token_type;
 
 typedef enum e_qstate
@@ -94,10 +95,14 @@ t_ast_node				*parse_tokens(t_tokensll *tokens);
 
 /* === parser_helpers.c === */
 int						parse_word(t_parser *p, t_argv_builder *ab);
-int						parse_redir(t_parser *p, t_redir **redirs);
+int						parse_redir(t_parser *p, t_redir **redirs, int src_fd);
+int						parse_redir_ionum(t_parser *p, t_redir **redirs);
 void					free_ab_redirs(t_argv_builder *ab, t_redir *redirs);
-int						is_redir_token(t_token_type type);
 t_redir_type			tok_to_redir(t_token_type type);
+
+/* === parser_dispatch.c === */
+int						parse_command_token(t_parser *p, t_argv_builder *ab,
+							t_redir **redirs);
 
 /* === utils_argv.c === */
 int						argv_builder_init(t_argv_builder *ab);
@@ -107,8 +112,10 @@ int						push_words_to_builder(t_argv_builder *ab, char **words,
 							size_t count);
 
 /* === utils_redir.c === */
-t_redir					*redir_new(t_redir_type type, const char *target);
+t_redir					*redir_new(t_redir_type type, const char *target,
+							int src_fd);
 void					redir_free(t_redir *redir);
 t_redir					*redir_append(t_redir *head, t_redir *node);
+int						is_redir_token(t_token_type type);
 
 #endif

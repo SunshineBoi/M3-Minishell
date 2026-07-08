@@ -6,7 +6,7 @@
 /*   By: kong <kong@student.42singapore.sg>         +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/07/03 17:20:16 by kong              #+#    #+#             */
-/*   Updated: 2026/07/03 17:20:17 by kong             ###   ########.fr       */
+/*   Updated: 2026/07/08 14:22:02 by kong             ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -28,7 +28,7 @@ int	parse_word(t_parser *p, t_argv_builder *ab)
 	return (0);
 }
 
-int	parse_redir(t_parser *p, t_redir **redirs)
+int	parse_redir(t_parser *p, t_redir **redirs, int src_fd)
 {
 	t_token_type	type;
 	t_redir			*new_redir;
@@ -37,7 +37,7 @@ int	parse_redir(t_parser *p, t_redir **redirs)
 	advance(p);
 	if (!p->cur || p->cur->type != TOK_STR)
 		return (-1);
-	new_redir = redir_new(tok_to_redir(type), p->cur->val);
+	new_redir = redir_new(tok_to_redir(type), p->cur->val, src_fd);
 	if (!new_redir)
 		return (-1);
 	*redirs = redir_append(*redirs, new_redir);
@@ -45,16 +45,19 @@ int	parse_redir(t_parser *p, t_redir **redirs)
 	return (0);
 }
 
+int	parse_redir_ionum(t_parser *p, t_redir **redirs)
+{
+	int	src_fd;
+
+	src_fd = ft_atoi(p->cur->val);
+	advance(p);
+	return (parse_redir(p, redirs, src_fd));
+}
+
 void	free_ab_redirs(t_argv_builder *ab, t_redir *redirs)
 {
 	argv_builder_free(ab);
 	redir_free(redirs);
-}
-
-int	is_redir_token(t_token_type type)
-{
-	return (type == TOK_DIRIN || type == TOK_DIROUT
-		|| type == TOK_DIRAPPND || type == TOK_HEREDOC);
 }
 
 t_redir_type	tok_to_redir(t_token_type type)
