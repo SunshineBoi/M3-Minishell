@@ -44,6 +44,16 @@ def test_signals():
     child.expect('minishell\\$ ')
     print("\n[OK] Ctrl+C during heredoc aborted the collection and redrew the prompt.")
 
+    # A SIGINT-interrupted getline must not poison stdin for the next heredoc.
+    child.sendline("cat << EOF")
+    child.expect("> ")
+    child.sendline("second heredoc works")
+    child.expect("> ")
+    child.sendline("EOF")
+    child.expect("second heredoc works")
+    child.expect('minishell\\$ ')
+    print("\n[OK] A heredoc still works after interrupting the previous one.")
+
     # 6. Test Ctrl+C (SIGINT) during sleep - should set exit status to 130
     time.sleep(0.2)
     child.sendline("sleep 10")

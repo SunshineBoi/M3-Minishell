@@ -12,25 +12,6 @@
 
 #include "minishell.h"
 
-static char	*get_next_line_non_interactive(void)
-{
-	char	*line;
-	size_t	len;
-	ssize_t	read;
-
-	line = NULL;
-	len = 0;
-	read = getline(&line, &len, stdin);
-	if (read == -1)
-	{
-		free(line);
-		return (NULL);
-	}
-	if (read > 0 && line[read - 1] == '\n')
-		line[read - 1] = '\0';
-	return (line);
-}
-
 static char	*read_prompt(void)
 {
 	char	*prompt;
@@ -40,7 +21,7 @@ static char	*read_prompt(void)
 	if (isatty(STDIN_FILENO))
 		prompt = readline("minishell$ ");
 	else
-		prompt = get_next_line_non_interactive();
+		prompt = read_line_fd(STDIN_FILENO);
 	return (prompt);
 }
 

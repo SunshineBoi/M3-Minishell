@@ -50,31 +50,11 @@ int	write_expanded(t_app *app, int fd, char *line, int is_quoted)
 	return (0);
 }
 
-static char	*get_next_line_non_interactive(void)
-{
-	char	*line;
-	size_t	len;
-	ssize_t	read;
-
-	line = NULL;
-	len = 0;
-	read = getline(&line, &len, stdin);
-	if (read == -1)
-	{
-		free(line);
-		return (NULL);
-	}
-	if (read > 0 && line[read - 1] == '\n')
-		line[read - 1] = '\0';
-	return (line);
-}
-
 static int	handle_heredoc_eof(int interactive)
 {
 	ft_putstr_fd("minishell: warning: here-document ", 2);
 	ft_putstr_fd("delimited by end-of-file\n", 2);
-	if (interactive)
-		clearerr(stdin);
+	(void)interactive;
 	return (0);
 }
 
@@ -88,7 +68,7 @@ int	read_heredoc_loop(t_app *app, int fd, const char *delim, int is_quoted)
 	{
 		if (interactive)
 			write(1, "> ", 2);
-		line = get_next_line_non_interactive();
+		line = read_line_fd(STDIN_FILENO);
 		if (g_signal == SIGINT)
 			return (free(line), -1);
 		if (!line)
