@@ -12,43 +12,43 @@
 
 #include "minishell.h"
 
-/**
- * @brief Update PWD and OLDPWD environment variables after chdir.
- */
-static int	update_pwd(t_app *app, const char *old_pwd)
+static char	*get_old_pwd(t_app *app, char *cwd)
 {
-	char	cwd[PATH_MAX];
+	char	*old_pwd;
 
-	if (old_pwd)
-		env_set(&app->env_list, "OLDPWD", old_pwd);
-	if (!getcwd(cwd, sizeof(cwd)))
-		return (errmsg("cd", NULL, strerror(errno)), EX_ERR);
-	env_set(&app->env_list, "PWD", cwd);
-	return (EX_OK);
+	old_pwd = env_get(app->env_list, "PWD");
+	if (old_pwd && old_pwd[0] == '/')
+		return (old_pwd);
+	if (getcwd(cwd, PATH_MAX))
+		return (cwd);
+	return (NULL);
 }
 
 /**
- * @brief Resolve the target directory from argv.
+ * @brief Update PWD and OLDPWD environment variables after chdir.
  */
-static char	*resolve_target(char **argv, t_app *app)
+static int	update_pwd(t_app *app, const char *old_pwd, const char *new_pwd)
 {
-	char	*target;
+	if (old_pwd && env_set(&app->env_list, "OLDPWD", old_pwd) != EX_OK)
+		return (printerr_syscall(ERR_MALLOC), EX_ERR);
+	if (env_set(&app->env_list, "PWD", new_pwd) != EX_OK)
+		return (printerr_syscall(ERR_MALLOC), EX_ERR);
+	return (EX_OK);
+}
 
-	if (!argv[1])
+static int	finish_cd(char **argv, t_app *app,
+	const char *old_pwd, char *new_pwd)
+{
+	int	status;
+
+	if (argv[1] && ft_strcmp(argv[1], "-") == 0)
 	{
-		target = env_get(app->env_list, "HOME");
-		if (!target)
-			errmsg("cd", NULL, "HOME not set");
-		return (target);
+		ft_putstr_fd(new_pwd, 1);
+		write(1, "\n", 1);
 	}
-	if (ft_strcmp(argv[1], "-") == 0)
-	{
-		target = env_get(app->env_list, "OLDPWD");
-		if (!target)
-			errmsg("cd", NULL, "OLDPWD not set");
-		return (target);
-	}
-	return (argv[1]);
+	status = update_pwd(app, old_pwd, new_pwd);
+	free(new_pwd);
+	return (status);
 }
 
 /**
@@ -60,24 +60,26 @@ static char	*resolve_target(char **argv, t_app *app)
  */
 int	builtin_cd(char **argv, t_app *app)
 {
-	char	*target;
-	char	*old_pwd;
-	char	cwd[PATH_MAX];
+	const char	*target;
+	char		*old_pwd;
+	char		*new_pwd;
+	char		cwd[PATH_MAX];
 
 	if (argv[1] && argv[2])
 		return (errmsg("cd", NULL, "too many arguments"), EX_ERR);
-	old_pwd = NULL;
-	if (getcwd(cwd, sizeof(cwd)))
-		old_pwd = cwd;
-	target = resolve_target(argv, app);
+	old_pwd = get_old_pwd(app, cwd);
+	target = resolve_cd_target(argv, app);
 	if (!target)
 		return (EX_ERR);
-	if (chdir(target) != 0)
-		return (errmsg("cd", target, strerror(errno)), EX_ERR);
-	if (argv[1] && ft_strcmp(argv[1], "-") == 0)
+	if (!*target)
+		return (errmsg("cd", target, strerror(ENOENT)), EX_ERR);
+	new_pwd = build_logical_pwd(old_pwd, target);
+	if (!new_pwd)
+		return (printerr_syscall(ERR_MALLOC), EX_ERR);
+	if (chdir(new_pwd) != 0)
 	{
-		ft_putstr_fd(target, 1);
-		write(1, "\n", 1);
+		free(new_pwd);
+		return (errmsg("cd", target, strerror(errno)), EX_ERR);
 	}
-	return (update_pwd(app, old_pwd));
+	return (finish_cd(argv, app, old_pwd, new_pwd));
 }

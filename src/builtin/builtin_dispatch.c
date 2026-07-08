@@ -51,7 +51,7 @@ int	exec_builtin(char **argv, t_app *app)
 	if (ft_strcmp(argv[0], "cd") == 0)
 		return (builtin_cd(argv, app));
 	if (ft_strcmp(argv[0], "pwd") == 0)
-		return (builtin_pwd());
+		return (builtin_pwd(app));
 	if (ft_strcmp(argv[0], "export") == 0)
 		return (builtin_export(argv, app));
 	if (ft_strcmp(argv[0], "unset") == 0)

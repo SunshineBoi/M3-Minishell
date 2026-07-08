@@ -13,12 +13,20 @@
 #include "minishell.h"
 
 /**
- * @brief pwd builtin — print working directory.
+ * @brief pwd builtin — print shell's logical working directory.
  */
-int	builtin_pwd(void)
+int	builtin_pwd(t_app *app)
 {
 	char	cwd[PATH_MAX];
+	char	*pwd;
 
+	pwd = env_get(app->env_list, "PWD");
+	if (pwd && *pwd)
+	{
+		ft_putstr_fd(pwd, 1);
+		write(1, "\n", 1);
+		return (EX_OK);
+	}
 	if (getcwd(cwd, sizeof(cwd)))
 	{
 		ft_putstr_fd(cwd, 1);
