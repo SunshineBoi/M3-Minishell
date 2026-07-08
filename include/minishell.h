@@ -150,6 +150,7 @@ void							ft_perror(char *msg);
 /* === utils_printerr_builtin.c === */
 void							printerr_syscall(t_errcode code);
 void							printerr_cd(char *filename);
+void							errmsg_export_identifier(const char *arg);
 
 /* === utils_str.c === */
 /**

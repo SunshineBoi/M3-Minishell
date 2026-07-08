@@ -26,6 +26,13 @@ void	printerr_cd(char *filename)
 	ft_putstr_fd(": no such file or directory\n", 2);
 }
 
+void	errmsg_export_identifier(const char *arg)
+{
+	ft_putstr_fd("minishell: export: `", 2);
+	ft_putstr_fd((char *)arg, 2);
+	ft_putstr_fd("': not a valid identifier\n", 2);
+}
+
 /**
  * @brief Print a formatted error: minishell: prefix: msg
  *        or minishell: prefix: arg: msg

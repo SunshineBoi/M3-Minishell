@@ -97,14 +97,14 @@ static int	handle_export_arg(const char *arg, t_app *app)
 		if (!key)
 			return (EX_ERR);
 		if (!is_valid_identifier(key))
-			return (errmsg("export", arg, "not a valid identifier"),
+			return (errmsg_export_identifier(arg),
 				free(key), EX_ERR);
 		if (env_set(&app->env_list, key, val + 1))
 			return (free(key), EX_ERR);
 		return (free(key), EX_OK);
 	}
 	if (!is_valid_identifier(arg))
-		return (errmsg("export", arg, "not a valid identifier"), EX_ERR);
+		return (errmsg_export_identifier(arg), EX_ERR);
 	return (env_set(&app->env_list, arg, NULL) != EX_OK);
 }
 

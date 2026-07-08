@@ -53,6 +53,22 @@ static char *capture_stdout_builtin(int (*fn)(char **, t_app *),
 	return (read_all(fds[0]));
 }
 
+static char *capture_stderr_builtin(int (*fn)(char **, t_app *),
+		char **argv, t_app *app, int *ret)
+{
+	int	fds[2];
+	int	saved;
+
+	cr_assert_eq(pipe(fds), 0);
+	saved = dup(STDERR_FILENO);
+	dup2(fds[1], STDERR_FILENO);
+	close(fds[1]);
+	*ret = fn(argv, app);
+	dup2(saved, STDERR_FILENO);
+	close(saved);
+	return (read_all(fds[0]));
+}
+
 static char *capture_stdout_env(int (*fn)(t_app *), t_app *app, int *ret)
 {
 	int	fds[2];
@@ -142,6 +158,23 @@ Test(builtins, export_invalid_identifier_returns_error)
 	ret = builtin_export(argv, &app);
 	cr_assert_eq(ret, 1);
 	cr_assert_str_eq(env_get(app.env_list, "OK"), "2");
+	env_free(app.env_list);
+}
+
+Test(builtins, export_invalid_identifier_quotes_like_bash)
+{
+	t_app	app;
+	char	*argv[] = {"export", "`", NULL};
+	char	*err;
+	int	ret;
+
+	app = make_app();
+	err = capture_stderr_builtin(builtin_export, argv, &app, &ret);
+	cr_assert_eq(ret, 1);
+	cr_assert_not_null(err);
+	cr_assert_str_eq(err,
+		"minishell: export: ``': not a valid identifier\n");
+	free(err);
 	env_free(app.env_list);
 }
 
