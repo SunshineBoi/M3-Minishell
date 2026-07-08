@@ -128,6 +128,15 @@ echo $OLDPWD' "$WORKDIR"
 expect_stdout 'cd - returns to previous directory' 'cd /tmp
 cd - >/dev/null
 pwd' "$WORKDIR"
+mkdir -p "$WORKDIR/symlink_parent/real" "$WORKDIR/symlink_parent/logical_parent"
+ln -sfn "$WORKDIR/symlink_parent/real" "$WORKDIR/symlink_parent/logical_parent/link"
+expect_stdout 'cd preserves logical symlink path' "cd $WORKDIR/symlink_parent/logical_parent/link
+pwd
+echo \$PWD
+cd ..
+pwd" "$WORKDIR/symlink_parent/logical_parent/link
+$WORKDIR/symlink_parent/logical_parent/link
+$WORKDIR/symlink_parent/logical_parent"
 expect_stdout 'export sets variable' 'export A=a=b=c
 echo "$A"' 'a=b=c'
 expect_stdout 'export sets multiple variables' 'export A=1 B=2
@@ -194,7 +203,7 @@ END' 'second'
 
 # Stage 10 to 12: environment, signals, exit status
 expect_status 'missing PATH handled as command not found' 'unset PATH
-no_such_command' 127
+ls' 127
 expect_stdout 'exit status expands after false' 'false
 echo $?' '1'
 expect_stdout 'exit status expands after true' 'true
